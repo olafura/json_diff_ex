@@ -1,0 +1,10 @@
+/_build
+/deps
+erl_crash.dump
+*.ez
+node_modules
+
+# Vim
+*~
+*.swp
+*.swo
