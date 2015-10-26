@@ -8,6 +8,7 @@ defmodule JsonDiffEx do
   defp check_shift([head|tail], shift_length) do
     case head do
       {_ , [_, 0, 0]} -> [head | check_shift(tail, shift_length+1)]
+      {_ , [_]} -> [head | check_shift(tail, shift_length-1)]
       {<<"_", x>>, ["", y, 3]} when (x-48)-y === shift_length -> check_shift(tail, shift_length)
       _ -> [head | check_shift(tail, shift_length)]
     end
@@ -19,14 +20,14 @@ defmodule JsonDiffEx do
 
   def map_find_match(i, value, [head | tail]) do
     {i2, value2} = case head do
-      {i2, [value2]} -> {i2, value2}
+      {<<"_", x>>, [value2, 0, 0]} -> {<<x>>, value2}
       _ -> {"", ""}
     end
     case i == i2 do
       true -> if is_map(value2) do
-          [{i, diff(value, value2)} | tail]
+          [{i, diff(value2, value)} | tail]
         else
-          [head | tail]
+          [{i, [value]}] ++ [ head | tail]
         end
       false -> [head | map_find_match(i, value, tail) ]
     end
@@ -38,7 +39,7 @@ defmodule JsonDiffEx do
 
   defp check_map([head | tail]) do
     case head do
-      {<<"_", x>>, [value, 0, 0]} when is_map(value) -> map_find_match(<<x>>, value, tail)
+      {i, [value]} when is_map(value) -> map_find_match(i, value, tail)
       _ -> [head | check_map(tail) ]
     end
   end
@@ -58,8 +59,9 @@ defmodule JsonDiffEx do
   def diff(l1, l2) when is_list(l1) and is_list(l2) do
     l1_in_l2 = Enum.with_index(Enum.map(l1, &([Enum.find_index(l2, fn(x) -> x === &1 end), &1])))
     not_in_l1 = Enum.filter(Enum.with_index(l2), fn({x,_}) -> not x in l1 end)
-    Enum.filter_map(l1_in_l2, fn({[i2, _], i}) -> i !== i2 end, &make_diff_list(&1))
-    ++ Enum.map(not_in_l1, &make_add_list(&1)) ++ [{"_t", "a"}]
+    Enum.map(not_in_l1, &make_add_list(&1))
+    ++ Enum.filter_map(l1_in_l2, fn({[i2, _], i}) -> i !== i2 end, &make_diff_list(&1))
+    ++ [{"_t", "a"}]
     |> check_shift(0)
     |> check_map
     |> Enum.into(%{})
