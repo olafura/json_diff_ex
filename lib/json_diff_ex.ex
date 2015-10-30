@@ -146,16 +146,30 @@ defmodule JsonDiffEx do
     do_diff(map1, map2)
   end
 
+  defp do_patch_shift(list1, <<index1>>, value1) do
+    Enum.map(list1, fn({<<k>>,v}) ->
+      case k >= index1 do
+        true ->  {<<k+1>>, v}
+        false -> {<<k>>, v}
+      end
+    end)
+    |> Enum.into([{<<index1>>, value1}])
+    |> Enum.into(%{})
+  end
+
   defp do_patch_list(list1, new_list1, diff1, i) do
     si = to_string(i)
-    {list2, new_list2, has_changed1} = case Map.get(diff1, "_" <> si, false) do
-      [_, 0, 0] -> {Map.delete(list1, si), new_list1, true}
-      ["", new_i, 3] -> {list1, Map.put(new_list1, to_string(new_i), Map.get(list1, si)), true}
-      false -> {list1, new_list1, false}
+    {list2, new_list2, has_changed1, has_deleted1} = case Map.get(diff1, "_" <> si, false) do
+      [_, 0, 0] -> {Map.delete(list1, si), new_list1, true, true}
+      ["", new_i, 3] -> {list1, Map.put(new_list1, to_string(new_i), Map.get(list1, si)), true, false}
+      false -> {list1, new_list1, false, false}
     end
     diff2 = Map.delete(diff1, "_" <> si)
     {list3, new_list3, has_changed2} = case Map.get(diff2, si, false) do
-      [new_value] -> {list2, Map.put(new_list2, si, new_value), true}
+      [new_value] -> case has_deleted1 do
+        true -> {list2, Map.put(new_list2, si, new_value), true}
+        false -> {do_patch_shift(list2, si, new_value), Map.put(new_list2, si, new_value), true}
+      end
       new_diff when is_map(new_diff) ->
         case Map.get(list2, si, false) do
           false -> {list2, new_list2, false}
