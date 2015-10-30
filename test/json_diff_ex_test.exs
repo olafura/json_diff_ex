@@ -28,6 +28,13 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2)
   end
 
+#  jsondiffpatch does things a little different
+#  test "check array diff reorder" do
+#    s1 = ~s({"1": [1,2,3]})
+#    s2 = ~s({"1": [3,2,1]})
+#    comparediff(s1, s2)
+#  end
+
   test "check array diff delete first" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [2,3]})
