@@ -15,11 +15,11 @@ defmodule JsonDiffEx do
     end
   end
 
-  def map_find_match(_, _, []) do
+  defp map_find_match(_, _, []) do
     []
   end
 
-  def map_find_match(i, value, [head | tail]) do
+  defp map_find_match(i, value, [head | tail]) do
     {i2, value2} = case head do
       {<<"_", x>>, [value2, 0, 0]} -> {<<x>>, value2}
       _ -> {"", ""}
@@ -57,7 +57,7 @@ defmodule JsonDiffEx do
     {to_string(i), [v]}
   end
 
-  def diff(l1, l2) when is_list(l1) and is_list(l2) do
+  defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
     l1_in_l2 = l1
                 |> Stream.map(
                     &([Enum.find_index(l2, fn(x) -> x === &1 end), &1]))
@@ -75,7 +75,7 @@ defmodule JsonDiffEx do
     |> Enum.into(%{})
   end
 
-  def diff(i1, i2) when not (is_list(i1) and is_list(i2))
+  defp do_diff(i1, i2) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
     case i1 === i2 do
       true -> nil
@@ -83,7 +83,7 @@ defmodule JsonDiffEx do
     end
   end
 
-  def diff(map1, map2) when is_map(map1) and is_map(map2) do
+  defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Map.keys(map1) ++ Map.keys(map2)
     keys_non_uniq
     |> Stream.uniq
@@ -91,7 +91,7 @@ defmodule JsonDiffEx do
       case Dict.has_key?(map1, k) do
         true ->
           case Dict.has_key?(map2, k) do
-            true -> {k, diff(Dict.get(map1, k), Dict.get(map2, k))}
+            true -> {k, do_diff(Dict.get(map1, k), Dict.get(map2, k))}
             false -> {k, [Dict.get(map1, k), 0, 0]}
           end
         false -> {k, [Dict.get(map2, k)]}
