@@ -3,8 +3,8 @@ defmodule JsonDiffEx.Mixfile do
 
   def project do
     [app: :json_diff_ex,
-     version: "0.0.3",
-     description: "Diff for JSON in Elixir",
+     version: "0.1.0",
+     description: "Diff and patch for JSON in Elixir",
      package: package,
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
