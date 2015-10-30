@@ -1,11 +1,14 @@
 defmodule JsonDiffEx.Mixfile do
   use Mix.Project
 
+  @version "0.1.1"
+
   def project do
     [app: :json_diff_ex,
-     version: "0.1.0",
+     version: @version,
      description: "Diff and patch for JSON in Elixir",
      package: package,
+     docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
