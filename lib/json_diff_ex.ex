@@ -9,9 +9,11 @@ defmodule JsonDiffEx do
   [jsondiffpatch](https://github.com/benjamine/jsondiffpatch)
   with it since it get's it's diff format from it.
 
-  Currently the only function is diff
+  It contains both diff and patch
 
   ## Example
+
+  ### Diff
 
   Simple example:
 
@@ -32,6 +34,30 @@ defmodule JsonDiffEx do
 
       iex> JsonDiffEx.diff %{"test" => [%{"1": 1}]}, %{"test" => [%{"1": 2}]}
       %{"test" => %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
+
+  ### Patch
+
+  Simple example of a patch:
+
+      iex> JsonDiffEx.patch %{"test" => 1}, %{"test" => [1, 2]}
+      %{"test" => 2}
+
+  Now a patch with list:
+
+      iex> JsonDiffEx.patch %{"test" => [1,2,3]},
+      ...> %{"test" => %{"_0" => [1, 0, 0], "_t" => "a"}}
+      %{"test" => [2,3]}
+
+  Now a patch with a map in the map:
+
+      iex> JsonDiffEx.patch %{"test" => %{"1": 1}}, %{"test" => %{"1": [1, 2]}}
+      %{"test" => %{"1": 2}}
+
+  Now with a map in an list in the map:
+
+      iex> JsonDiffEx.patch %{"test" => [%{"1": 1}]},
+      ...> %{"test" => %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
+      %{"test" => [%{"1": 2}]}
 
   """
 
@@ -216,6 +242,10 @@ defmodule JsonDiffEx do
     end)
   end
 
+  @doc """
+  Patch only supports Elixir's Map format.
+  """
+  @spec patch(map, map) :: map
   def patch(map1, diff1) when is_map(map1) and is_map(diff1) do
     do_patch(map1, diff1)
   end
