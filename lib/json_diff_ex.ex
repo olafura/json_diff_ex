@@ -15,23 +15,23 @@ defmodule JsonDiffEx do
 
   Simple example:
 
-      iex> JsonDiffEx.diff %{"test": 1}, %{"test": 2}
-      %{test: [1, 2]}
+      iex> JsonDiffEx.diff %{"test" => 1}, %{"test" => 2}
+      %{"test" => [1, 2]}
 
   Now with list:
 
-      iex> JsonDiffEx.diff %{"test": [1,2,3]}, %{"test": [2,3]}
-      %{test: %{"_0" => [1, 0, 0], "_t" => "a"}}
+      iex> JsonDiffEx.diff %{"test" => [1,2,3]}, %{"test" => [2,3]}
+      %{"test" => %{"_0" => [1, 0, 0], "_t" => "a"}}
 
   Now with a map in the map:
 
-      iex> JsonDiffEx.diff %{"test": %{"1": 1}}, %{"test": %{"1": 2}}
-      %{test: %{"1": [1, 2]}}
+      iex> JsonDiffEx.diff %{"test" => %{"1": 1}}, %{"test" => %{"1": 2}}
+      %{"test" => %{"1": [1, 2]}}
 
   Now with a map in an list in the map:
 
-      iex> JsonDiffEx.diff %{"test": [%{"1": 1}]}, %{"test": [%{"1": 2}]}
-      %{test: %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
+      iex> JsonDiffEx.diff %{"test" => [%{"1": 1}]}, %{"test" => [%{"1": 2}]}
+      %{"test" => %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
 
   """
 
