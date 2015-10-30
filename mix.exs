@@ -27,6 +27,8 @@ defmodule JsonDiffEx.Mixfile do
 
   defp deps do
     [{:poison, "~> 1.5", only: :test},
-     {:dogma, "~> 0.0", only: :dev}]
+     {:dogma, "~> 0.0", only: :dev},
+     {:earmark, "~> 0.1", only: :dev},
+     {:ex_doc, "~> 0.10", only: :dev}]
   end
 end

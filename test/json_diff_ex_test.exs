@@ -1,5 +1,6 @@
 defmodule JsonDiffExTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  doctest JsonDiffEx
 
   import JsonDiffEx
 

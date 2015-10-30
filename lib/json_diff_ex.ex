@@ -1,4 +1,39 @@
 defmodule JsonDiffEx do
+  @moduledoc """
+  This is the documentation of JsonDiffEx.
+
+  There are no runtime dependencies and it should be easy
+  to use.
+
+  You can use the javascript library 
+  [jsondiffpatch](https://github.com/benjamine/jsondiffpatch)
+  with it since it get's it's diff format from it.
+
+  Currently the only function is diff
+
+  ## Example
+
+  Simple example:
+
+      iex> JsonDiffEx.diff %{"test": 1}, %{"test": 2}
+      %{test: [1, 2]}
+
+  Now with list:
+
+      iex> JsonDiffEx.diff %{"test": [1,2,3]}, %{"test": [2,3]}
+      %{test: %{"_0" => [1, 0, 0], "_t" => "a"}}
+
+  Now with a map in the map:
+
+      iex> JsonDiffEx.diff %{"test": %{"1": 1}}, %{"test": %{"1": 2}}
+      %{test: %{"1": [1, 2]}}
+
+  Now with a map in an list in the map:
+
+      iex> JsonDiffEx.diff %{"test": [%{"1": 1}]}, %{"test": [%{"1": 2}]}
+      %{test: %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
+
+  """
 
   defp check_shift([], _) do
     []
@@ -99,5 +134,15 @@ defmodule JsonDiffEx do
     end)
     |> Stream.filter(fn({_,v}) -> v !== nil end)
     |> Enum.into(%{})
+  end
+
+  @doc """
+  Diff only supports Elixir's Map format but they can contain,
+  lists, other maps and anything that can be compared like strings,
+  numbers and boolean.
+  """
+  @spec diff(map, map) :: map
+  def diff(map1, map2) when is_map(map1) and is_map(map2) do
+    do_diff(map1, map2)
   end
 end
