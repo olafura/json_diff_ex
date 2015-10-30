@@ -9,7 +9,8 @@ defmodule JsonDiffEx do
     case head do
       {_ , [_, 0, 0]} -> [head | check_shift(tail, shift_length+1)]
       {_ , [_]} -> [head | check_shift(tail, shift_length-1)]
-      {<<"_", x>>, ["", y, 3]} when (x-48)-y === shift_length -> check_shift(tail, shift_length)
+      {<<"_", x>>, ["", y, 3]} when (x-48)-y === shift_length ->
+        check_shift(tail, shift_length)
       _ -> [head | check_shift(tail, shift_length)]
     end
   end
@@ -57,26 +58,36 @@ defmodule JsonDiffEx do
   end
 
   def diff(l1, l2) when is_list(l1) and is_list(l2) do
-    l1_in_l2 = Enum.with_index(Enum.map(l1, &([Enum.find_index(l2, fn(x) -> x === &1 end), &1])))
-    not_in_l1 = Enum.filter(Enum.with_index(l2), fn({x,_}) -> not x in l1 end)
-    Enum.map(not_in_l1, &make_add_list(&1))
-    ++ Enum.filter_map(l1_in_l2, fn({[i2, _], i}) -> i !== i2 end, &make_diff_list(&1))
+    l1_in_l2 = l1
+                |> Stream.map(
+                    &([Enum.find_index(l2, fn(x) -> x === &1 end), &1]))
+                |> Enum.with_index
+    not_in_l1 = l2
+                |> Stream.with_index
+                |> Enum.filter(fn({x,_}) -> not x in l1 end)
+    unfiltered = Enum.map(not_in_l1, &make_add_list(&1))
+    ++ Enum.filter_map(l1_in_l2, fn({[i2, _], i}) ->
+      i !== i2 end, &make_diff_list(&1))
     ++ [{"_t", "a"}]
+    unfiltered
     |> check_shift(0)
     |> check_map
     |> Enum.into(%{})
   end
 
-  def diff(i1, i2) when not (is_list(i1) and is_list(i2)) and not (is_map(i1) and is_map(i2)) do
+  def diff(i1, i2) when not (is_list(i1) and is_list(i2))
+                    and not (is_map(i1) and is_map(i2)) do
     case i1 === i2 do
       true -> nil
       false -> [i1, i2]
     end
-  end 
+  end
 
   def diff(map1, map2) when is_map(map1) and is_map(map2) do
-    keys = Map.keys(map1) ++ Map.keys(map2) |> Enum.uniq
-    Enum.map(keys, fn(k) ->
+    keys_non_uniq = Map.keys(map1) ++ Map.keys(map2)
+    keys_non_uniq
+    |> Stream.uniq
+    |> Stream.map(fn(k) ->
       case Dict.has_key?(map1, k) do
         true ->
           case Dict.has_key?(map2, k) do
@@ -86,7 +97,7 @@ defmodule JsonDiffEx do
         false -> {k, [Dict.get(map2, k)]}
       end
     end)
-    |> Enum.filter(fn({_,v}) -> v !== nil end)
+    |> Stream.filter(fn({_,v}) -> v !== nil end)
     |> Enum.into(%{})
   end
 end

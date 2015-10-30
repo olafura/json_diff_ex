@@ -1,1 +1,2 @@
-%{"poison": {:hex, :poison, "1.5.0"}}
+%{"dogma": {:hex, :dogma, "0.0.11"},
+  "poison": {:hex, :poison, "1.5.0"}}
