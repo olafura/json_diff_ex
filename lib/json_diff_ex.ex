@@ -145,4 +145,64 @@ defmodule JsonDiffEx do
   def diff(map1, map2) when is_map(map1) and is_map(map2) do
     do_diff(map1, map2)
   end
+
+  defp do_patch_list(list1, new_list1, diff1, i) do
+    si = to_string(i)
+    {list2, new_list2, has_changed1} = case Map.get(diff1, "_" <> si, false) do
+      [_, 0, 0] -> {Map.delete(list1, si), new_list1, true}
+      ["", new_i, 3] -> {list1, Map.put(new_list1, to_string(new_i), Map.get(list1, si)), true}
+      false -> {list1, new_list1, false}
+    end
+    diff2 = Map.delete(diff1, "_" <> si)
+    {list3, new_list3, has_changed2} = case Map.get(diff2, si, false) do
+      [new_value] -> {list2, Map.put(new_list2, si, new_value), true}
+      new_diff when is_map(new_diff) ->
+        case Map.get(list2, si, false) do
+          false -> {list2, new_list2, false}
+          old_value ->
+            new_value = do_patch(old_value, new_diff)
+            {list2, Map.put(new_list2, si, new_value), true}
+        end
+      false -> case {Map.has_key?(new_list2, si), Map.has_key?(list2, si)} do
+          {false, true} -> {list2, Map.put(new_list2, si, Map.get(list2, si)), true}
+          {true, _} -> {list2, new_list2, true}
+          {false, false} -> {list2, new_list2, false}
+      end
+    end
+    diff3 = Map.delete(diff2, si)
+    case map_size(diff3) === 0 and not (has_changed1 or has_changed2) do
+      true -> new_list3
+        |> Enum.map(fn({k, v}) -> v end)
+      false -> do_patch_list(list3, new_list3, diff3, i+1)
+    end
+  end
+
+  defp do_patch(map1, diff1) do
+    diff2 = Stream.map(diff1, fn({k, v}) ->
+      case v do
+        [new_value] -> {k, new_value}
+        _ -> {k, v}
+      end
+    end)
+    |> Enum.into(%{})
+    Map.merge(map1, diff2, fn(k, v_map, v_diff) ->
+      case v_diff do
+        [^v_map, new_value] -> new_value
+        new_map when is_map(new_map) ->
+          case Map.get(new_map, "_t", false) === "a" do
+            true ->
+              v_diff2 = Map.delete(v_diff, "_t")
+              Enum.with_index(v_map)
+              |> Enum.map(fn({v, k}) -> {to_string(k),v} end)
+              |> Enum.into(%{})
+              |> do_patch_list(%{}, v_diff2, 0)
+            false -> do_patch(v_map, v_diff)
+          end
+      end
+    end)
+  end
+
+  def patch(map1, diff1) when is_map(map1) and is_map(diff1) do
+    do_patch(map1, diff1)
+  end
 end
