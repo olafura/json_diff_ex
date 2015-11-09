@@ -127,4 +127,4 @@ haven't been able to finish it my self.**
 ## Links
 [Package](https://hex.pm/packages/json_diff_ex)
 
-[Documentation](http://hexdocs.pm/json_diff_ex/)
+[Documentation](http://hexdocs.pm/json_diff_ex/0.5.0/JsonDiffEx.html)
