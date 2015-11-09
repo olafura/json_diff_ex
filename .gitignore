@@ -1,9 +1,11 @@
 /_build
 /deps
 /doc
+/cover
 erl_crash.dump
 *.ez
 node_modules
+mix.lock
 
 # Vim
 *~
