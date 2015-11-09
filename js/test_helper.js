@@ -1,5 +1,5 @@
-var jsondiffpatch = require('jsondiffpatch').create();
-//var JSON = require("json");
+var jsondiffpatch = require('jsondiffpatch').create({textDiff: {minLength: 10000}});
+
 
 var argv = process.argv;
 if(argv.length > 3) {
