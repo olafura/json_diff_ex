@@ -88,9 +88,9 @@ defmodule JsonDiffEx do
       true -> if is_map(value2) do
           [{i, diff(value2, value)} | tail]
         else
-          [{i, [value]}] ++ [ head | tail]
+          Enum.concat([{i, [value]}], [ head | tail])
         end
-      false -> [head | map_find_match(i, value, tail) ]
+      false -> Enum.concat(map_find_match(i, value, tail), [head])
     end
   end
 
@@ -100,7 +100,9 @@ defmodule JsonDiffEx do
 
   defp check_map([head | tail]) do
     case head do
-      {i, [value]} when is_map(value) -> map_find_match(i, value, tail)
+      {i, [value]} when is_map(value) ->
+        [head2 | tail2 ] = map_find_match(i, value, tail)
+        [head2 | check_map(:lists.reverse(tail2))]
       _ -> [head | check_map(tail) ]
     end
   end
