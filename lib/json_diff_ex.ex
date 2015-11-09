@@ -5,7 +5,7 @@ defmodule JsonDiffEx do
   There are no runtime dependencies and it should be easy
   to use.
 
-  You can use the javascript library 
+  You can use the javascript library
   [jsondiffpatch](https://github.com/benjamine/jsondiffpatch)
   with it since it get's it's diff format from it.
 
@@ -65,7 +65,6 @@ defmodule JsonDiffEx do
     []
   end
 
-
   defp check_shift([head|tail], shift_length) do
     case head do
       {_ , [_, 0, 0]} -> [head | check_shift(tail, shift_length+1)]
@@ -120,17 +119,17 @@ defmodule JsonDiffEx do
 
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
     l1_in_l2 = l1
-                |> Stream.map(
+                |> Enum.map(
                     &([Enum.find_index(l2, fn(x) -> x === &1 end), &1]))
                 |> Enum.with_index
     not_in_l1 = l2
-                |> Stream.with_index
+                |> Enum.with_index
                 |> Enum.filter(fn({x,_}) -> not x in l1 end)
-    unfiltered = Enum.map(not_in_l1, &make_add_list(&1))
-    ++ Enum.filter_map(l1_in_l2, fn({[i2, _], i}) ->
-      i !== i2 end, &make_diff_list(&1))
-    ++ [{"_t", "a"}]
-    unfiltered
+    not_in_l1
+    |> Enum.map(&make_add_list(&1))
+    |> Enum.concat(Enum.filter_map(l1_in_l2, fn({[i2, _], i}) ->
+      i !== i2 end, &make_diff_list(&1)))
+    |> Enum.concat([{"_t", "a"}])
     |> check_shift(0)
     |> check_map
     |> Enum.into(%{})
@@ -145,17 +144,17 @@ defmodule JsonDiffEx do
   end
 
   defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
-    keys_non_uniq = Map.keys(map1) ++ Map.keys(map2)
+    keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
     keys_non_uniq
     |> Stream.uniq
     |> Stream.map(fn(k) ->
-      case Dict.has_key?(map1, k) do
+      case Map.has_key?(map1, k) do
         true ->
-          case Dict.has_key?(map2, k) do
-            true -> {k, do_diff(Dict.get(map1, k), Dict.get(map2, k))}
-            false -> {k, [Dict.get(map1, k), 0, 0]}
+          case Map.has_key?(map2, k) do
+            true -> {k, do_diff(Map.get(map1, k), Map.get(map2, k))}
+            false -> {k, [Map.get(map1, k), 0, 0]}
           end
-        false -> {k, [Dict.get(map2, k)]}
+        false -> {k, [Map.get(map2, k)]}
       end
     end)
     |> Stream.filter(fn({_,v}) -> v !== nil end)
@@ -209,12 +208,9 @@ defmodule JsonDiffEx do
           }
       end
       new_diff when is_map(new_diff) ->
-        case Map.get(list2, si, false) do
-          false -> {list2, new_list2, false}
-          old_value ->
-            new_value = do_patch(old_value, new_diff)
-            {list2, Map.put(new_list2, si, new_value), true}
-        end
+        new_value = Map.fetch!(list2, si)
+        |> do_patch(new_diff)
+        {list2, Map.put(new_list2, si, new_value), true}
       false ->
         has_keys1 = {Map.has_key?(new_list2, si), Map.has_key?(list2, si)}
         case has_keys1 do
@@ -233,7 +229,7 @@ defmodule JsonDiffEx do
   end
 
   defp do_patch(map1, diff1) do
-    diff2 = diff1 |> Stream.map(fn({k, v}) ->
+    diff2 = diff1 |> Enum.map(fn({k, v}) ->
       case v do
         [new_value] -> {k, new_value}
         _ -> {k, v}
@@ -248,8 +244,8 @@ defmodule JsonDiffEx do
             true ->
               v_diff2 = Map.delete(v_diff, "_t")
               v_map
-              |> Enum.with_index
-              |> Enum.map(fn({v, k}) -> {to_string(k),v} end)
+              |> Stream.with_index
+              |> Stream.map(fn({v, k}) -> {to_string(k),v} end)
               |> Enum.into(%{})
               |> do_patch_list(%{}, v_diff2, 0)
             false -> do_patch(v_map, v_diff)
