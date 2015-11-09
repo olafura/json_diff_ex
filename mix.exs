@@ -9,6 +9,7 @@ defmodule JsonDiffEx.Mixfile do
      description: "Diff and patch for JSON in Elixir",
      package: package,
      docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
+     test_coverage: [tool: Coverex.Task],
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -32,6 +33,8 @@ defmodule JsonDiffEx.Mixfile do
     [{:poison, "~> 1.5", only: :test},
      {:dogma, "~> 0.0", only: :dev},
      {:earmark, "~> 0.1", only: :dev},
-     {:ex_doc, "~> 0.10", only: :dev}]
+     {:ex_doc, "~> 0.10", only: :dev},
+     {:coverex, "~> 1.4.1", only: :test},
+     {:httpoison, "~> 0.8.0", only: :test}]
   end
 end

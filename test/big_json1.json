@@ -1,0 +1,36 @@
+{
+    "_id": "56353d1bca16dd7354045f7f",
+    "index": 0,
+    "guid": "809e01c1-b8c4-4d49-a9e7-204091cd6ae8",
+    "isActive": true,
+    "balance": "$1,343.75",
+    "picture": "http://placehold.it/32x32",
+    "age": 21,
+    "eyeColor": "brown",
+    "name": "Eleanor Baxter",
+    "gender": "female",
+    "company": "RAMJOB",
+    "email": "eleanorbaxter@ramjob.com",
+    "phone": "+1 (876) 456-3989",
+    "address": "265 Sutton Street, Tioga, Hawaii, 9975",
+    "about": "Laborum cupidatat proident deserunt fugiat aliquip deserunt. Mollit deserunt amet ut tempor veniam qui. Nulla ipsum non nostrud ut magna excepteur nulla non cupidatat magna ipsum.\r\n",
+    "registered": "2014-07-20T11:36:42 +04:00",
+    "latitude": -44.600585,
+    "longitude": -9.257008,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Larsen Sawyer"
+      },
+      {
+        "id": 1,
+        "name": "Frost Carey"
+      },
+      {
+        "id": 2,
+        "name": "Irene Lee"
+      }
+    ],
+    "greeting": "Hello, Eleanor Baxter! You have 8 unread messages.",
+    "favoriteFruit": "apple"
+}

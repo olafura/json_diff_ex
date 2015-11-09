@@ -1,0 +1,36 @@
+{
+    "_id": "56353d1bec3821c78ad14479",
+    "index": 1,
+    "guid": "b2b50dae-5d30-4514-82b1-26714d91e264",
+    "isActive": false,
+    "balance": "$3,273.15",
+    "picture": "http://placehold.it/32x32",
+    "age": 29,
+    "eyeColor": "blue",
+    "name": "Talley Reyes",
+    "gender": "male",
+    "company": "ANDRYX",
+    "email": "talleyreyes@andryx.com",
+    "phone": "+1 (895) 435-3714",
+    "address": "919 Lefferts Avenue, Winchester, Colorado, 2905",
+    "about": "Consequat ullamco proident anim sunt ipsum esse Lorem tempor pariatur. Nostrud officia mollit aliqua sit consectetur sint minim veniam proident labore anim incididunt ex. Est amet laboris pariatur ut id qui et.\r\n",
+    "registered": "2015-03-11T11:45:43 +04:00",
+    "latitude": 39.655822,
+    "longitude": -70.899696,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Shelby Barrett"
+      },
+      {
+        "id": 1,
+        "name": "Gloria Mccray"
+      },
+      {
+        "id": 2,
+        "name": "Hopper Luna"
+      }
+    ],
+    "greeting": "Hello, Talley Reyes! You have 2 unread messages.",
+    "favoriteFruit": "banana"
+}
