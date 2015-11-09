@@ -75,35 +75,37 @@ defmodule JsonDiffEx do
     end
   end
 
-  defp map_find_match(_, _, []) do
-    []
+  defp split_underscore({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
+    false
   end
 
-  defp map_find_match(i, value, [head | tail]) do
-    {i2, value2} = case head do
-      {<<"_", x>>, [value2, 0, 0]} -> {<<x>>, value2}
-      _ -> {"", ""}
-    end
-    case i == i2 do
-      true -> if is_map(value2) do
-          [{i, diff(value2, value)} | tail]
-        else
-          Enum.concat([{i, [value]}], [ head | tail])
-        end
-      false -> Enum.concat(map_find_match(i, value, tail), [head])
-    end
+  defp split_underscore(_) do
+    true
   end
 
-  defp check_map([]) do
-    []
+  defp all_checked([], deleted_map) do
+    Map.to_list(deleted_map)
   end
 
-  defp check_map([head | tail]) do
+  defp all_checked([head | tail], deleted_map) do
     case head do
       {i, [value]} when is_map(value) ->
-        [head2 | tail2 ] = map_find_match(i, value, tail)
-        [head2 | check_map(:lists.reverse(tail2))]
-      _ -> [head | check_map(tail) ]
+        neg_i = "_" <> i
+        case Map.fetch(deleted_map, neg_i) do
+          {:ok, [value2, 0, 0]} -> [{i, diff(value2, value)} | all_checked(tail, Map.delete(deleted_map, neg_i))]
+          :error -> [head | all_checked(tail, deleted_map)]
+        end
+      _ -> [head | all_checked(tail, deleted_map)]
+    end
+  end
+
+  defp check_map(list1) do
+    case Enum.split_while(list1, &split_underscore/1) do
+      {[], []} -> list1
+      {_, []} -> list1
+      {check, deleted} ->
+        deleted_map = Enum.into(deleted, %{})
+        all_checked(check, deleted_map)
     end
   end
 
@@ -131,9 +133,9 @@ defmodule JsonDiffEx do
     |> Enum.map(&make_add_list(&1))
     |> Enum.concat(Enum.filter_map(l1_in_l2, fn({[i2, _], i}) ->
       i !== i2 end, &make_diff_list(&1)))
-    |> Enum.concat([{"_t", "a"}])
     |> check_shift(0)
     |> check_map
+    |> Enum.concat([{"_t", "a"}])
     |> Enum.into(%{})
   end
 
