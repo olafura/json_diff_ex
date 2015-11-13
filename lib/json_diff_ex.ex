@@ -109,30 +109,25 @@ defmodule JsonDiffEx do
     end
   end
 
-  defp make_diff_list({[nil, v], i}) do
-    {"_"<>to_string(i), [v, 0, 0]}
-  end
-
-  defp make_diff_list({[i2, _], i}) do
-    {"_"<>to_string(i), ["", i2, 3]}
-  end
-
-  defp make_add_list({v, i}) do
-    {to_string(i), [v]}
-  end
-
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
-    l1_in_l2 = l1
-                |> Enum.map(
-                    &([Enum.find_index(l2, fn(x) -> x === &1 end), &1]))
-                |> Enum.with_index
-    not_in_l1 = l2
-                |> Enum.with_index
-                |> Enum.filter(fn({x,_}) -> not x in l1 end)
-    not_in_l1
-    |> Enum.map(&make_add_list(&1))
-    |> Enum.concat(Enum.filter_map(l1_in_l2, fn({[i2, _], i}) ->
-      i !== i2 end, &make_diff_list(&1)))
+    map1 = Enum.with_index(l1) |> Enum.into(%{})
+    map2 = Enum.with_index(l2) |> Enum.into(%{})
+    {rest_map2, new_list} = Enum.reduce(map1, {map2, %{}},
+      fn({k, i1}, {new_map2, acc}) ->
+        case Map.get(new_map2, k) do
+          nil -> {new_map2, Map.put(acc, "_"<>to_string(i1), [k, 0, 0])}
+          ^i1 -> {Map.delete(new_map2, k), acc}
+          i2 -> {Map.delete(new_map2, k),
+                 Map.put(acc, "_"<>to_string(i1), ["", i2, 3])}
+        end
+      end
+    )
+    Enum.reduce(rest_map2, new_list,
+      fn({k2, i3}, acc) ->
+        Map.put(acc, to_string(i3), [k2])
+      end
+    )
+    |> Enum.to_list
     |> check_shift(0)
     |> check_map
     |> Enum.concat([{"_t", "a"}])
@@ -150,8 +145,8 @@ defmodule JsonDiffEx do
   defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
     keys_non_uniq
-    |> Stream.uniq
-    |> Stream.map(fn(k) ->
+    |> Enum.uniq
+    |> Enum.map(fn(k) ->
       case Map.has_key?(map1, k) do
         true ->
           case Map.has_key?(map2, k) do
@@ -161,7 +156,7 @@ defmodule JsonDiffEx do
         false -> {k, [Map.get(map2, k)]}
       end
     end)
-    |> Stream.filter(fn({_,v}) -> v !== nil end)
+    |> Enum.filter(fn({_,v}) -> v !== nil end)
     |> Enum.into(%{})
   end
 
@@ -248,8 +243,8 @@ defmodule JsonDiffEx do
             true ->
               v_diff2 = Map.delete(v_diff, "_t")
               v_map
-              |> Stream.with_index
-              |> Stream.map(fn({v, k}) -> {to_string(k),v} end)
+              |> Enum.with_index
+              |> Enum.map(fn({v, k}) -> {to_string(k),v} end)
               |> Enum.into(%{})
               |> do_patch_list(%{}, v_diff2, 0)
             false -> do_patch(v_map, v_diff)
