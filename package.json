@@ -1,7 +1,8 @@
 {
-  "repository": {
-  },
+  "repository": {},
   "dependencies": {
+    "babel-brunch": "^6.0.0",
+    "elixirscript-brunch": "^0.1.0",
     "jsondiffpatch": "^0.1"
   }
 }

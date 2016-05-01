@@ -61,6 +61,7 @@ defmodule JsonDiffEx do
 
   """
 
+  @spec split_underscore({binary, list}) :: boolean
   defp split_underscore({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
     false
   end
@@ -69,6 +70,7 @@ defmodule JsonDiffEx do
     true
   end
 
+  @spec all_checked(list, map) :: list
   defp all_checked([], deleted_map) do
     Map.to_list(deleted_map)
   end
@@ -85,28 +87,29 @@ defmodule JsonDiffEx do
     end
   end
 
+  @spec do_diff(list, list) :: map
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
     map1 = l1 |> Enum.with_index |> Enum.into(%{})
     map2 = l2 |> Enum.with_index |> Enum.into(%{})
     {rest_map2, new_list} = Enum.reduce(map1, {map2, %{}},
       fn({k, i1}, {new_map2, acc}) ->
         case Map.get(new_map2, k) do
-          nil -> {new_map2, Map.put(acc, "_"<><<i1+48>>, [k, 0, 0])}
+          nil -> {new_map2, Map.put(acc, "_" <> <<i1 + 48>>, [k, 0, 0])}
           ^i1 -> {Map.delete(new_map2, k), acc}
           i2 -> {Map.delete(new_map2, k),
-                 Map.put(acc, "_"<><<i1+48>>, ["", i2, 3])}
+                 Map.put(acc, "_" <> <<i1 + 48>>, ["", i2, 3])}
         end
       end
     )
     new_list2 = Enum.reduce(rest_map2, new_list,
       fn({k2, i3}, acc) ->
-        Map.put(acc, <<i3+48>>, [k2])
+        Map.put(acc, <<i3 + 48>>, [k2])
       end
     )
     {_shift, new_list3} = Enum.reduce(new_list2, {0, new_list2}, fn
-      ({_ , [_, 0, 0]}, {shift_length, acc}) -> {shift_length+1, acc}
-      ({_, [_]}, {shift_length, acc}) -> {shift_length-1, acc}
-      ({<<"_", x>>, ["", y, 3]}, {shift_length, acc}) when (x-48)-y === shift_length ->
+      ({_ , [_, 0, 0]}, {shift_length, acc}) -> {shift_length + 1, acc}
+      ({_, [_]}, {shift_length, acc}) -> {shift_length - 1, acc}
+      ({<<"_", x>>, ["", y, 3]}, {shift_length, acc}) when (x - 48) - y === shift_length ->
         {shift_length, Map.delete(acc, <<"_", x>>)}
       (_, {shift_length, acc}) -> {shift_length, acc}
       end
@@ -122,6 +125,7 @@ defmodule JsonDiffEx do
     |> Enum.into(%{})
   end
 
+  @spec do_diff(binary | integer | float, binary | integer | float) :: map
   defp do_diff(i1, i2) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
     case i1 === i2 do
@@ -130,6 +134,7 @@ defmodule JsonDiffEx do
     end
   end
 
+  @spec do_diff(map, map) :: map
   defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
     keys_non_uniq
@@ -162,7 +167,7 @@ defmodule JsonDiffEx do
     list1
     |> Enum.map(fn({<<k>>,v}) ->
       case k >= index1 do
-        true ->  {<<k+1>>, v}
+        true ->  {<<k + 1>>, v}
         false -> {<<k>>, v}
       end
     end)
@@ -171,14 +176,14 @@ defmodule JsonDiffEx do
   end
 
   defp do_patch_list(list1, new_list1, diff1, i) do
-    si = <<i+48>>
+    si = <<i + 48>>
     {list2, new_list2, has_changed1, has_deleted1} =
       case Map.get(diff1, "_" <> si, false) do
         [_, 0, 0] -> {Map.delete(list1, si), new_list1, true, true}
         ["", new_i, 3] ->
           {
             list1,
-            Map.put(new_list1, <<new_i+48>>, Map.get(list1, si)), true, false
+            Map.put(new_list1, <<new_i + 48>>, Map.get(list1, si)), true, false
           }
         false -> {list1, new_list1, false, false}
       end
@@ -210,7 +215,7 @@ defmodule JsonDiffEx do
     case map_size(diff3) === 0 and not (has_changed1 or has_changed2) do
       true -> new_list3
         |> Enum.map(fn({_k, v}) -> v end)
-      false -> do_patch_list(list3, new_list3, diff3, i+1)
+      false -> do_patch_list(list3, new_list3, diff3, i + 1)
     end
   end
 
@@ -231,7 +236,7 @@ defmodule JsonDiffEx do
               v_diff2 = Map.delete(v_diff, "_t")
               v_map
               |> Enum.with_index
-              |> Enum.map(fn({v, k}) -> {<<k+48>>,v} end)
+              |> Enum.map(fn({v, k}) -> {<<k + 48>>,v} end)
               |> Enum.into(%{})
               |> do_patch_list(%{}, v_diff2, 0)
             false -> do_patch(v_map, v_diff)

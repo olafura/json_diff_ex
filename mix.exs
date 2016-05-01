@@ -30,11 +30,13 @@ defmodule JsonDiffEx.Mixfile do
   end
 
   defp deps do
-    [{:poison, "~> 1.5", only: :test},
+    [{:poison, "~> 1.5"},
      {:dogma, "~> 0.0", only: :dev},
+     {:credo, "~> 0.3.13", only: :dev},
      {:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.10", only: :dev},
      {:coverex, "~> 1.4.1", only: :test},
-     {:httpoison, "~> 0.8.0", only: :test}]
+     {:httpoison, "~> 0.8.0", only: :test},
+     {:eep, git: "https://github.com/virtan/eep.git", only: :test}]
   end
 end
