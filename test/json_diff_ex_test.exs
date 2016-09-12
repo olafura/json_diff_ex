@@ -41,6 +41,27 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
+  test "check the same object" do
+    s1 = ~s({"1": [1,2,3], "2": 1})
+    j1 = Poison.decode!(s1)
+    assert diff(j1, j1) == %{}
+    # jsondiffpatch returns undefined
+  end
+
+  test "check object diff not changed" do
+    s1 = ~s({"1": 1, "2": 2})
+    s2 = ~s({"1": 2, "2": 2})
+    res = %{"1" => [1, 2]}
+    comparediff(s1, s2, res)
+  end
+
+  test "check array diff not changed" do
+    s1 = ~s({"1": 1, "2": [1]})
+    s2 = ~s({"1": 2, "2": [1]})
+    res = %{"1" => [1, 2]}
+    comparediff(s1, s2, res)
+  end
+
   test "check array diff all changed" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [4,5,6]})

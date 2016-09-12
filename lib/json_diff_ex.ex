@@ -87,7 +87,7 @@ defmodule JsonDiffEx do
     end
   end
 
-  @spec do_diff(list, list) :: map
+  @spec do_diff(list, list) :: map | nil
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
     map1 = l1 |> Enum.with_index |> Enum.into(%{})
     map2 = l2 |> Enum.with_index |> Enum.into(%{})
@@ -114,18 +114,23 @@ defmodule JsonDiffEx do
       (_, {shift_length, acc}) -> {shift_length, acc}
       end
     )
-    case Enum.split_while(new_list3, &split_underscore/1) do
+    diff = case Enum.split_while(new_list3, &split_underscore/1) do
       {[], []} -> new_list3
       {_, []} -> new_list3
       {check, deleted} ->
         deleted_map = Enum.into(deleted, %{})
         all_checked(check, deleted_map)
     end
-    |> Enum.concat([{"_t", "a"}])
-    |> Enum.into(%{})
+    if diff != %{} do
+      diff
+      |> Enum.concat([{"_t", "a"}])
+      |> Enum.into(%{})
+    else
+      nil
+    end
   end
 
-  @spec do_diff(binary | integer | float, binary | integer | float) :: map
+  @spec do_diff(binary | integer | float, binary | integer | float) :: map | nil
   defp do_diff(i1, i2) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
     case i1 === i2 do
@@ -134,10 +139,10 @@ defmodule JsonDiffEx do
     end
   end
 
-  @spec do_diff(map, map) :: map
+  @spec do_diff(map, map) :: map | nil
   defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
-    keys_non_uniq
+    diff = keys_non_uniq
     |> Enum.uniq
     |> Enum.map(fn(k) ->
       case Map.has_key?(map1, k) do
@@ -151,6 +156,11 @@ defmodule JsonDiffEx do
     end)
     |> Enum.filter(fn({_,v}) -> v !== nil end)
     |> Enum.into(%{})
+    if map_size(diff) != 0 do
+      diff
+    else
+      nil
+    end
   end
 
   @doc """
@@ -160,7 +170,10 @@ defmodule JsonDiffEx do
   """
   @spec diff(map, map) :: map
   def diff(map1, map2) when is_map(map1) and is_map(map2) do
-    do_diff(map1, map2)
+    case do_diff(map1, map2) do
+      nil -> %{}
+      map -> map
+    end
   end
 
   defp do_patch_shift(list1, <<index1>>, value1) do
