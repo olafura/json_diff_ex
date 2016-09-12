@@ -212,6 +212,13 @@ defmodule JsonDiffExTest do
     comparediff_patch(s1, s2, diff1)
   end
 
+  test "check if deleted key works" do
+    s1 = ~s({"foo": 1})
+    s2 = ~s({"bar": 3})
+    diff1 = %{"bar" => [3], "foo" => [1, 0, 0]}
+    comparediff_patch(s1, s2, diff1)
+  end
+
   test "check bigger patch" do
     s1 = @big_json1
     s2 = @big_json2
