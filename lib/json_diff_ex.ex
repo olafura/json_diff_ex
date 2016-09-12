@@ -254,8 +254,11 @@ defmodule JsonDiffEx do
               |> do_patch_list(%{}, v_diff2, 0)
             false -> do_patch(v_map, v_diff)
           end
+        [1, 0, 0] -> nil
       end
     end)
+    |> Enum.filter(fn({_k, v}) -> v !== nil end)
+    |> Enum.into(%{})
   end
 
   @doc """
