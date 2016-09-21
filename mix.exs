@@ -1,7 +1,7 @@
 defmodule JsonDiffEx.Mixfile do
   use Mix.Project
 
-  @version "0.5.2"
+  @version "0.5.3"
 
   def project do
     [app: :json_diff_ex,
@@ -18,7 +18,7 @@ defmodule JsonDiffEx.Mixfile do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Olafur Arason"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/olafura/json_diff_ex"}
