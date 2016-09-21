@@ -32,7 +32,7 @@ defmodule JsonDiffEx.Mixfile do
   defp deps do
     [{:poison, "~> 1.5", only: [:dev, :test]},
      {:dogma, "~> 0.0", only: :dev},
-     {:credo, "~> 0.3.13", only: :dev},
+     {:credo, "~> 0.4.0", only: :dev},
      {:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.10", only: :dev},
      {:coverex, "~> 1.4.1", only: :test},

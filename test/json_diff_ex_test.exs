@@ -184,11 +184,18 @@ defmodule JsonDiffExTest do
     comparediff_patch(s1, s2, diff1)
   end
 
- test "check array patch shift one" do
+  test "check array patch shift one" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [0,1,2,3]})
     diff1 = %{"1" => %{"0" => [0], "_t" => "a"}}
     comparediff_patch(s1, s2, diff1)
+  end
+
+  test "check array patch shift one inside" do
+   s1 = ~s({"1": [1,2,3]})
+   s2 = ~s({"1": [1,2,0,3]})
+   diff1 = %{"1" => %{"3" => [0], "_t" => "a"}}
+   comparediff_patch(s1, s2, diff1)
   end
 
   test "check object in array patch" do
@@ -219,6 +226,20 @@ defmodule JsonDiffExTest do
     comparediff_patch(s1, s2, diff1)
   end
 
+  test "check if more than 10 in index works" do
+    s1 = ~s({"cards": [{"foo1": true}, {"foo2": true}, {"foo3": true},
+                       {"foo4": true}, {"foo5": true}, {"foo6": true},
+                       {"foo7": true}, {"foo8": true}, {"foo9": true},
+                       {"foo10": true}, {"foo11": true}, {"foo12": true}]})
+    s2 = ~s({"cards": [{"foo1": true}, {"foo2": true}, {"foo3": true},
+                       {"foo4": true}, {"foo5": true}, {"foo6": true},
+                       {"foo7": true}, {"foo8": true}, {"foo9": true},
+                       {"foo10": true}, {"foo11": true}, {"foo12": true}]})
+    diff1 = %{"cards" => %{"12" => %{"foo11" => [true, false]}, "_t" => "a"}}
+    comparediff_patch(s1, s2, diff1)
+  end
+
+
   test "check bigger patch" do
     s1 = @big_json1
     s2 = @big_json2
@@ -233,5 +254,4 @@ defmodule JsonDiffExTest do
             "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"], "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]}
     comparediff_patch(s1, s2, diff1)
   end
-
 end

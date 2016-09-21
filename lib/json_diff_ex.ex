@@ -94,26 +94,32 @@ defmodule JsonDiffEx do
     {rest_map2, new_list} = Enum.reduce(map1, {map2, %{}},
       fn({k, i1}, {new_map2, acc}) ->
         case Map.get(new_map2, k) do
-          nil -> {new_map2, Map.put(acc, "_" <> <<i1 + 48>>, [k, 0, 0])}
+          nil -> {new_map2, Map.put(acc, "_" <> Integer.to_string(i1), [k, 0, 0])}
           ^i1 -> {Map.delete(new_map2, k), acc}
           i2 -> {Map.delete(new_map2, k),
-                 Map.put(acc, "_" <> <<i1 + 48>>, ["", i2, 3])}
+                 Map.put(acc, "_" <> Integer.to_string(i1), ["", i2, 3])}
         end
       end
     )
     new_list2 = Enum.reduce(rest_map2, new_list,
       fn({k2, i3}, acc) ->
-        Map.put(acc, <<i3 + 48>>, [k2])
+        Map.put(acc, Integer.to_string(i3), [k2])
       end
     )
     {_shift, new_list3} = Enum.reduce(new_list2, {0, new_list2}, fn
-      ({_ , [_, 0, 0]}, {shift_length, acc}) -> {shift_length + 1, acc}
-      ({_, [_]}, {shift_length, acc}) -> {shift_length - 1, acc}
-      ({<<"_", x>>, ["", y, 3]}, {shift_length, acc}) when (x - 48) - y === shift_length ->
-        {shift_length, Map.delete(acc, <<"_", x>>)}
+      ({_ , [_, 0, 0]}, {shift_length, acc}) ->
+        {shift_length + 1, acc}
+      ({_, [_]}, {shift_length, acc}) ->
+        {shift_length - 1, acc}
+      ({<<"_", x>>, ["", y, 3]}, {shift_length, acc}) ->
+        xi = String.to_integer(<<x>>)
+        if xi - y === shift_length do
+          {shift_length, Map.delete(acc, <<"_", x>>)}
+        else
+          {shift_length, acc}
+        end
       (_, {shift_length, acc}) -> {shift_length, acc}
-      end
-    )
+    end)
     diff = case Enum.split_while(new_list3, &split_underscore/1) do
       {[], []} -> new_list3
       {_, []} -> new_list3
@@ -176,27 +182,29 @@ defmodule JsonDiffEx do
     end
   end
 
-  defp do_patch_shift(list1, <<index1>>, value1) do
+  defp do_patch_shift(list1, stindex1, value1) do
+    index1 = String.to_integer(stindex1)
     list1
-    |> Enum.map(fn({<<k>>,v}) ->
+    |> Enum.map(fn({kst,v}) ->
+      k = String.to_integer(kst)
       case k >= index1 do
-        true ->  {<<k + 1>>, v}
-        false -> {<<k>>, v}
+        true ->  {Integer.to_string(k + 1), v}
+        false -> {kst, v}
       end
     end)
-    |> Enum.into([{<<index1>>, value1}])
+    |> Enum.into([{Integer.to_string(index1), value1}])
     |> Enum.into(%{})
   end
 
   defp do_patch_list(list1, new_list1, diff1, i) do
-    si = <<i + 48>>
+    si = Integer.to_string(i)
     {list2, new_list2, has_changed1, has_deleted1} =
       case Map.get(diff1, "_" <> si, false) do
         [_, 0, 0] -> {Map.delete(list1, si), new_list1, true, true}
         ["", new_i, 3] ->
           {
             list1,
-            Map.put(new_list1, <<new_i + 48>>, Map.get(list1, si)), true, false
+            Map.put(new_list1, Integer.to_string(new_i), Map.get(list1, si)), true, false
           }
         false -> {list1, new_list1, false, false}
       end
@@ -249,7 +257,7 @@ defmodule JsonDiffEx do
               v_diff2 = Map.delete(v_diff, "_t")
               v_map
               |> Enum.with_index
-              |> Enum.map(fn({v, k}) -> {<<k + 48>>,v} end)
+              |> Enum.map(fn({v, k}) -> {Integer.to_string(k),v} end)
               |> Enum.into(%{})
               |> do_patch_list(%{}, v_diff2, 0)
             false -> do_patch(v_map, v_diff)
