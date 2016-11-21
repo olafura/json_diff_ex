@@ -87,23 +87,60 @@ defmodule JsonDiffEx do
     end
   end
 
+  defp list_to_indexes_map(list) do
+    list
+    |> Enum.with_index
+    |> Enum.reduce(%{}, fn {v, i}, map ->
+      if Map.has_key?(map, v) do
+        Map.update!(map, v, &([i | &1]))
+      else
+        Map.put(map, v, [i])
+      end
+    end)
+    |> Enum.map(fn {v, i} -> {v, Enum.sort(i)} end)
+    |> Enum.into(%{})
+  end
+
+  defp remove_index(map, key, index) do
+    Map.update!(map, key, fn list ->
+      case List.delete(list, index) do
+        [] -> nil
+        list -> list
+      end
+    end)
+  end
+
   @spec do_diff(list, list) :: map | nil
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
-    map1 = l1 |> Enum.with_index |> Enum.into(%{})
-    map2 = l2 |> Enum.with_index |> Enum.into(%{})
+    map1 = l1 |> list_to_indexes_map
+    map2 = l2 |> list_to_indexes_map
     {rest_map2, new_list} = Enum.reduce(map1, {map2, %{}},
-      fn({k, i1}, {new_map2, acc}) ->
-        case Map.get(new_map2, k) do
-          nil -> {new_map2, Map.put(acc, "_" <> Integer.to_string(i1), [k, 0, 0])}
-          ^i1 -> {Map.delete(new_map2, k), acc}
-          i2 -> {Map.delete(new_map2, k),
+      fn({k, indexes}, {new_map2, acc}) ->
+        Enum.reduce(indexes, {new_map2, acc},
+          fn(i1, {new_map2, acc}) ->
+            case Map.get(new_map2, k) do
+              nil -> {new_map2, Map.put(acc, "_" <> Integer.to_string(i1), [k, 0, 0])}
+              list -> if Enum.any?(list, &(&1 == i1)) do
+                {remove_index(new_map2, k, i1), acc}
+              else
+                i2 = List.first(list)
+                {remove_index(new_map2, k, i2),
                  Map.put(acc, "_" <> Integer.to_string(i1), ["", i2, 3])}
-        end
+              end
+            end
+          end
+        )
       end
     )
     new_list2 = Enum.reduce(rest_map2, new_list,
       fn({k2, i3}, acc) ->
-        Map.put(acc, Integer.to_string(i3), [k2])
+        if not is_nil(i3) do
+          Enum.reduce(i3, acc, fn i3, acc ->
+            Map.put(acc, Integer.to_string(i3), [k2])
+          end)
+        else
+          acc
+        end
       end
     )
     {_shift, new_list3} = Enum.reduce(new_list2, {0, new_list2}, fn
