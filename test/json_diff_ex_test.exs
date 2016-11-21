@@ -91,6 +91,13 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
+  test "check array diff includes duplicate values" do
+    s1 = ~s({"1": [1,2,1,3,3,2]})
+    s2 = ~s({"1": [3,1,2,1,2,3,3,2,1]})
+    res = %{"1" => %{"_0" => ["", 1, 3], "_1" => ["", 2, 3], "_2" => ["", 3, 3], "_3" => ["", 0, 3], "_4" => ["", 5, 3], "_5" => ["", 4, 3], "6" => [3], "7" => [2], "8" => [1], "_t" => "a"}}
+    comparediff(s1, s2, res)
+  end
+
   test "check object in array diff" do
     s1 = ~s({"1": [{"1":1}]})
     s2 = ~s({"1": [{"1":2}]})
@@ -194,7 +201,7 @@ defmodule JsonDiffExTest do
   test "check array patch shift one inside" do
    s1 = ~s({"1": [1,2,3]})
    s2 = ~s({"1": [1,2,0,3]})
-   diff1 = %{"1" => %{"3" => [0], "_t" => "a"}}
+   diff1 = %{"1" => %{"2" => [0], "_t" => "a"}}
    comparediff_patch(s1, s2, diff1)
   end
 
@@ -234,8 +241,8 @@ defmodule JsonDiffExTest do
     s2 = ~s({"cards": [{"foo1": true}, {"foo2": true}, {"foo3": true},
                        {"foo4": true}, {"foo5": true}, {"foo6": true},
                        {"foo7": true}, {"foo8": true}, {"foo9": true},
-                       {"foo10": true}, {"foo11": true}, {"foo12": true}]})
-    diff1 = %{"cards" => %{"12" => %{"foo11" => [true, false]}, "_t" => "a"}}
+                       {"foo10": true}, {"foo11": true}, {"foo12": true}]}) # TODO {"foo12": false}
+    diff1 = %{"cards" => %{"11" => %{"foo12" => [true, false]}, "_t" => "a"}}
     comparediff_patch(s1, s2, diff1)
   end
 
