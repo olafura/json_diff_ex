@@ -91,6 +91,13 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
+  test "check array diff includes duplicate values" do
+    s1 = ~s({"1": [1,2,1,3,3,2]})
+    s2 = ~s({"1": [3,1,2,1,2,3,3,2,1]})
+    res = %{"1" => %{"_t" => "a", "0" => [3], "4" => [2], "8" => [1]}}
+    comparediff(s1, s2, res)
+  end
+
   test "check object in array diff" do
     s1 = ~s({"1": [{"1":1}]})
     s2 = ~s({"1": [{"1":2}]})
