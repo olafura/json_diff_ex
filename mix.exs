@@ -10,7 +10,7 @@ defmodule JsonDiffEx.Mixfile do
      package: package,
      docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
      test_coverage: [tool: Coverex.Task],
-     elixir: "~> 1.0",
+     elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps]

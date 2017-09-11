@@ -89,40 +89,25 @@ defmodule JsonDiffEx do
 
   @spec do_diff(list, list) :: map | nil
   defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
-    map1 = l1 |> Enum.with_index |> Enum.into(%{})
-    map2 = l2 |> Enum.with_index |> Enum.into(%{})
-    {rest_map2, new_list} = Enum.reduce(map1, {map2, %{}},
-      fn({k, i1}, {new_map2, acc}) ->
-        case Map.get(new_map2, k) do
-          nil -> {new_map2, Map.put(acc, "_" <> Integer.to_string(i1), [k, 0, 0])}
-          ^i1 -> {Map.delete(new_map2, k), acc}
-          i2 -> {Map.delete(new_map2, k),
-                 Map.put(acc, "_" <> Integer.to_string(i1), ["", i2, 3])}
-        end
-      end
-    )
-    new_list2 = Enum.reduce(rest_map2, new_list,
-      fn({k2, i3}, acc) ->
-        Map.put(acc, Integer.to_string(i3), [k2])
-      end
-    )
-    {_shift, new_list3} = Enum.reduce(new_list2, {0, new_list2}, fn
-      ({_ , [_, 0, 0]}, {shift_length, acc}) ->
-        {shift_length + 1, acc}
-      ({_, [_]}, {shift_length, acc}) ->
-        {shift_length - 1, acc}
-      ({<<"_", x>>, ["", y, 3]}, {shift_length, acc}) ->
-        xi = String.to_integer(<<x>>)
-        if xi - y === shift_length do
-          {shift_length, Map.delete(acc, <<"_", x>>)}
-        else
-          {shift_length, acc}
-        end
-      (_, {shift_length, acc}) -> {shift_length, acc}
+    new_list = List.myers_difference(l1, l2)
+    |> Enum.reduce({0, %{}}, fn
+      {:eq, equal}, {count, acc} ->
+        {count + length(equal), acc}
+      {:del, deleted_list}, {count, acc} ->
+        {_, acc3} = Enum.reduce(deleted_list, {count, acc}, fn deleted_item, {count2, acc2} ->
+          {count2 + 1, Map.put(acc2, "_" <> Integer.to_string(count2), [deleted_item, 0, 0])}
+        end)
+        {count, acc3}
+      {:ins, inserted_list}, {count, acc} ->
+        Enum.reduce(inserted_list, {count, acc}, fn inserted_item, {count2, acc2} ->
+          {count2 + 1, Map.put(acc2, Integer.to_string(count2), [inserted_item])}
+        end)
     end)
-    diff = case Enum.split_while(new_list3, &split_underscore/1) do
-      {[], []} -> new_list3
-      {_, []} -> new_list3
+    |> elem(1)
+
+    diff = case Enum.split_while(new_list, &split_underscore/1) do
+      {[], []} -> new_list
+      {_, []} -> new_list
       {check, deleted} ->
         deleted_map = Enum.into(deleted, %{})
         all_checked(check, deleted_map)
