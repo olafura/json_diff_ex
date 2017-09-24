@@ -7,13 +7,13 @@ defmodule JsonDiffEx.Mixfile do
     [app: :json_diff_ex,
      version: @version,
      description: "Diff and patch for JSON in Elixir",
-     package: package,
+     package: package(),
      docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
      test_coverage: [tool: Coverex.Task],
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   defp package do
@@ -31,12 +31,11 @@ defmodule JsonDiffEx.Mixfile do
 
   defp deps do
     [{:poison, "~> 1.5", only: [:dev, :test]},
-     {:dogma, "~> 0.0", only: :dev},
-     {:credo, "~> 0.4.0", only: :dev},
-     {:earmark, "~> 0.1", only: :dev},
-     {:ex_doc, "~> 0.10", only: :dev},
-     {:coverex, "~> 1.4.1", only: :test},
-     {:httpoison, "~> 0.8.0", only: :test},
+     {:credo, "~> 0.8", only: :dev},
+     {:earmark, "~> 1.2", only: :dev},
+     {:ex_doc, "~> 0.16", only: :dev},
+     {:coverex, "~> 1.4", only: :test},
+     {:httpoison, "~> 0.13", only: :test},
      {:eep, git: "https://github.com/virtan/eep.git", only: :test}]
   end
 end
