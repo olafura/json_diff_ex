@@ -61,14 +61,23 @@ defmodule JsonDiffEx do
 
   """
 
+  @spec split_underscore_map({binary, list}) :: boolean
+  defp split_underscore_map({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
+    false
+  end
+  defp split_underscore_map(_) do
+    true
+  end
+
   @spec split_underscore({binary, list}) :: boolean
-  defp split_underscore({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
+  defp split_underscore({<<"_", _>>, [_, 0, 0]}) do
     false
   end
 
   defp split_underscore(_) do
     true
   end
+
 
   @spec all_checked(list, map) :: list
   defp all_checked([], deleted_map) do
@@ -105,7 +114,7 @@ defmodule JsonDiffEx do
     end)
     |> elem(1)
 
-    diff = case Enum.split_while(new_list, &split_underscore/1) do
+    diff = case Enum.split_while(new_list, &split_underscore_map/1) do
       {[], []} -> new_list
       {_, []} -> new_list
       {check, deleted} ->
@@ -167,62 +176,44 @@ defmodule JsonDiffEx do
     end
   end
 
-  defp do_patch_shift(list1, stindex1, value1) do
-    index1 = String.to_integer(stindex1)
-    list1
-    |> Enum.map(fn({kst,v}) ->
-      k = String.to_integer(kst)
-      case k >= index1 do
-        true ->  {Integer.to_string(k + 1), v}
-        false -> {kst, v}
-      end
-    end)
-    |> Enum.into([{Integer.to_string(index1), value1}])
-    |> Enum.into(%{})
+  defp do_patch_delete(list, diff) do
+    case Enum.split_while(diff, &split_underscore/1) do
+      {[], []} -> {list, diff}
+      {_, []} -> {list, diff}
+      {check, deleted} ->
+        delete_list = Enum.map(deleted, fn
+          {"_" <> s_index, _} -> String.to_integer(s_index)
+        end)
+
+        filtered_list = Enum.filter(list, fn
+          {_, index} -> index not in delete_list
+        end)
+        |> clean_index()
+        |> Enum.with_index()
+
+        {filtered_list, Enum.into(check, %{})}
+    end
   end
 
-  defp do_patch_list(list1, new_list1, diff1, i) do
-    si = Integer.to_string(i)
-    {list2, new_list2, has_changed1, has_deleted1} =
-      case Map.get(diff1, "_" <> si, false) do
-        [_, 0, 0] -> {Map.delete(list1, si), new_list1, true, true}
-        ["", new_i, 3] ->
-          {
-            list1,
-            Map.put(new_list1, Integer.to_string(new_i), Map.get(list1, si)), true, false
-          }
-        false -> {list1, new_list1, false, false}
-      end
-    diff2 = Map.delete(diff1, "_" <> si)
-    {list3, new_list3, has_changed2} = case Map.get(diff2, si, false) do
-      [new_value] -> case has_deleted1 do
-        true -> {list2, Map.put(new_list2, si, new_value), true}
-        false ->
-          {
-            do_patch_shift(list2, si, new_value),
-            Map.put(new_list2, si, new_value),
-            true
-          }
-      end
-      new_diff when is_map(new_diff) ->
-        new_value = list2 |> Map.fetch!(si)
-        |> do_patch(new_diff)
-        {list2, Map.put(new_list2, si, new_value), true}
-      false ->
-        has_keys1 = {Map.has_key?(new_list2, si), Map.has_key?(list2, si)}
-        case has_keys1 do
-          {false, true} ->
-            {list2, Map.put(new_list2, si, Map.get(list2, si)), true}
-          {true, _} -> {list2, new_list2, true}
-          {false, false} -> {list2, new_list2, false}
-        end
-    end
-    diff3 = Map.delete(diff2, si)
-    case map_size(diff3) === 0 and not (has_changed1 or has_changed2) do
-      true -> new_list3
-        |> Enum.map(fn({_k, v}) -> v end)
-      false -> do_patch_list(list3, new_list3, diff3, i + 1)
-    end
+  defp clean_index(list) do
+    Enum.map(list, fn {value, _index} -> value end)
+  end
+
+  defp do_patch_list({list, diff}) do
+    new_list = clean_index(list)
+
+    diff
+    |> Enum.map(fn
+     {s_index, value} -> {String.to_integer(s_index), value}
+    end)
+    |> Enum.reduce(new_list, fn
+      {index, %{} = diff_map}, acc ->
+        List.update_at(acc, index, &do_patch(&1, diff_map))
+      {index, [value | []]}, acc ->
+        List.insert_at(acc, index, value)
+      {index, [_old_value | [new_value]]}, acc ->
+        List.replace_at(acc, index, new_value)
+    end)
   end
 
   defp do_patch(map1, diff1) do
@@ -240,11 +231,11 @@ defmodule JsonDiffEx do
           case Map.get(new_map, "_t", false) === "a" do
             true ->
               v_diff2 = Map.delete(v_diff, "_t")
+
               v_map
               |> Enum.with_index
-              |> Enum.map(fn({v, k}) -> {Integer.to_string(k),v} end)
-              |> Enum.into(%{})
-              |> do_patch_list(%{}, v_diff2, 0)
+              |> do_patch_delete(v_diff2)
+              |> do_patch_list()
             false -> do_patch(v_map, v_diff)
           end
         [1, 0, 0] -> nil
