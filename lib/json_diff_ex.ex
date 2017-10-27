@@ -137,16 +137,14 @@ defmodule JsonDiffEx do
   @spec do_diff(binary | integer | float, binary | integer | float) :: map | nil
   defp do_diff(i1, i2, opts) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
-    if Keyword.get(opts, :strict_equality, @default_strict_equality) do
-      case i1 === i2 do
-        true -> nil
-        false -> [i1, i2]
-      end
+    compare = if Keyword.get(opts, :strict_equality, @default_strict_equality) do
+      &===/2
     else
-      case i1 == i2 do
-        true -> nil
-        false -> [i1, i2]
-      end
+      &==/2
+    end
+    case compare.(i1, i2) do
+      true -> nil
+      false -> [i1, i2]
     end
   end
 
