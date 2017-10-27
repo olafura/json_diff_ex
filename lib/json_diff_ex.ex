@@ -81,26 +81,24 @@ defmodule JsonDiffEx do
   end
 
 
-  @spec all_checked(list, map) :: list
-  defp all_checked([], deleted_map) do
+  @spec all_checked(list, map, list) :: list
+  defp all_checked([], deleted_map, _) do
     Map.to_list(deleted_map)
   end
 
-  defp all_checked([head | tail], deleted_map) do
+  defp all_checked([head | tail], deleted_map, opts) do
     case head do
       {i, [value]} when is_map(value) ->
         neg_i = "_" <> i
         case Map.fetch(deleted_map, neg_i) do
-          {:ok, [value2, 0, 0]} -> [{i, do_diff(value2, value)} | all_checked(tail, Map.delete(deleted_map, neg_i))]
-          :error -> [head | all_checked(tail, deleted_map)]
+          {:ok, [value2, 0, 0]} -> [{i, do_diff(value2, value, opts)} | all_checked(tail, Map.delete(deleted_map, neg_i), opts)]
+          :error -> [head | all_checked(tail, deleted_map, opts)]
         end
-      _ -> [head | all_checked(tail, deleted_map)]
+      _ -> [head | all_checked(tail, deleted_map, opts)]
     end
   end
 
-  defp do_diff(l1, l2, opts \\ [])
-
-  @spec do_diff(list, list) :: map | nil
+  @spec do_diff(list, list, list) :: map | nil
   defp do_diff(l1, l2, opts) when is_list(l1) and is_list(l2) do
     new_list = List.myers_difference(l1, l2)
     |> Enum.reduce({0, %{}}, fn
@@ -123,7 +121,7 @@ defmodule JsonDiffEx do
       {_, []} -> new_list
       {check, deleted} ->
         deleted_map = Enum.into(deleted, %{})
-        all_checked(check, deleted_map)
+        all_checked(check, deleted_map, opts)
     end
     if diff != %{} do
       diff
@@ -134,7 +132,7 @@ defmodule JsonDiffEx do
     end
   end
 
-  @spec do_diff(binary | integer | float, binary | integer | float) :: map | nil
+  @spec do_diff(binary | integer | float, binary | integer | float, list) :: map | nil
   defp do_diff(i1, i2, opts) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
     compare = if Keyword.get(opts, :strict_equality, @default_strict_equality) do
@@ -148,7 +146,7 @@ defmodule JsonDiffEx do
     end
   end
 
-  @spec do_diff(map, map) :: map | nil
+  @spec do_diff(map, map, list) :: map | nil
   defp do_diff(map1, map2, opts) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
     diff = keys_non_uniq
