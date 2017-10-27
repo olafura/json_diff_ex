@@ -61,6 +61,8 @@ defmodule JsonDiffEx do
 
   """
 
+  @default_strict_equality true
+
   @spec split_underscore_map({binary, list}) :: boolean
   defp split_underscore_map({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
     false
@@ -96,8 +98,10 @@ defmodule JsonDiffEx do
     end
   end
 
+  defp do_diff(l1, l2, opts \\ [])
+
   @spec do_diff(list, list) :: map | nil
-  defp do_diff(l1, l2) when is_list(l1) and is_list(l2) do
+  defp do_diff(l1, l2, opts) when is_list(l1) and is_list(l2) do
     new_list = List.myers_difference(l1, l2)
     |> Enum.reduce({0, %{}}, fn
       {:eq, equal}, {count, acc} ->
@@ -131,16 +135,21 @@ defmodule JsonDiffEx do
   end
 
   @spec do_diff(binary | integer | float, binary | integer | float) :: map | nil
-  defp do_diff(i1, i2) when not (is_list(i1) and is_list(i2))
+  defp do_diff(i1, i2, opts) when not (is_list(i1) and is_list(i2))
                     and not (is_map(i1) and is_map(i2)) do
-    case i1 === i2 do
+    compare = if Keyword.get(opts, :strict_equality, @default_strict_equality) do
+      &===/2
+    else
+      &==/2
+    end
+    case compare.(i1, i2) do
       true -> nil
       false -> [i1, i2]
     end
   end
 
   @spec do_diff(map, map) :: map | nil
-  defp do_diff(map1, map2) when is_map(map1) and is_map(map2) do
+  defp do_diff(map1, map2, opts) when is_map(map1) and is_map(map2) do
     keys_non_uniq = Enum.concat(Map.keys(map1), Map.keys(map2))
     diff = keys_non_uniq
     |> Enum.uniq
@@ -148,7 +157,7 @@ defmodule JsonDiffEx do
       case Map.has_key?(map1, k) do
         true ->
           case Map.has_key?(map2, k) do
-            true -> {k, do_diff(Map.get(map1, k), Map.get(map2, k))}
+            true -> {k, do_diff(Map.get(map1, k), Map.get(map2, k), opts)}
             false -> {k, [Map.get(map1, k), 0, 0]}
           end
         false -> {k, [Map.get(map2, k)]}
@@ -169,8 +178,8 @@ defmodule JsonDiffEx do
   numbers and boolean.
   """
   @spec diff(map, map) :: map
-  def diff(map1, map2) when is_map(map1) and is_map(map2) do
-    case do_diff(map1, map2) do
+  def diff(map1, map2, opts \\ []) when is_map(map1) and is_map(map2) do
+    case do_diff(map1, map2, opts) do
       nil -> %{}
       map -> map
     end
