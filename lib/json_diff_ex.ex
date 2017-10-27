@@ -35,6 +35,12 @@ defmodule JsonDiffEx do
       iex> JsonDiffEx.diff %{"test" => [%{"1": 1}]}, %{"test" => [%{"1": 2}]}
       %{"test" => %{"0" => %{"1": [1, 2]}, "_t" => "a"}}
 
+  If you have problems with using both integers and floats you can override the
+  strict comparison:
+
+      iex> JsonDiffEx.diff(%{a: 2100}, %{a: 2.1e3}, strict_equality: false)
+      %{}
+
   ### Patch
 
   Simple example of a patch:
