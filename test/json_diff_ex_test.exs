@@ -156,6 +156,24 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
+  test "check === with same numeric type" do
+    m1 = %{"1" => 4, "2" => 2}
+    m2 = %{"1" => 4, "2" => 2}
+    assert diff(m1, m2) == %{}
+  end
+
+  test "check == but different numeric type" do
+    m1 = %{"1" => 4, "2" => 2}
+    m2 = %{"1" => 4.0, "2" => 2}
+    assert diff(m1, m2) == %{"1" => [4, 4.0]}
+  end
+
+  test "check === but different numeric type" do
+    m1 = %{"1" => 4, "2" => 2}
+    m2 = %{"1" => 4.0, "2" => 2}
+    assert diff(m1, m2) == %{}
+  end
+
   test "check basic patch" do
     s1 = ~s({"1": 1})
     s2 = ~s({"1": 2})
