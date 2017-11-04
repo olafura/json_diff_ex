@@ -97,10 +97,13 @@ defmodule JsonDiffEx do
       {i, [value]} when is_map(value) ->
         neg_i = "_" <> i
         case Map.fetch(deleted_map, neg_i) do
-          {:ok, [value2, 0, 0]} -> [{i, do_diff(value2, value, opts)} | all_checked(tail, Map.delete(deleted_map, neg_i), opts)]
-          :error -> [head | all_checked(tail, deleted_map, opts)]
+          {:ok, [value2, 0, 0]} ->
+            [{i, do_diff(value2, value, opts)} | all_checked(tail, Map.delete(deleted_map, neg_i), opts)]
+          :error ->
+            [head | all_checked(tail, deleted_map, opts)]
         end
-      _ -> [head | all_checked(tail, deleted_map, opts)]
+      _ ->
+        [head | all_checked(tail, deleted_map, opts)]
     end
   end
 
@@ -128,6 +131,11 @@ defmodule JsonDiffEx do
       {check, deleted} ->
         deleted_map = Enum.into(deleted, %{})
         all_checked(check, deleted_map, opts)
+        |> Enum.filter(fn
+          {_, nil} -> false
+          _ -> true
+        end)
+        |> Enum.into(%{})
     end
     if diff != %{} do
       diff
