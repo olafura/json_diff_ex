@@ -1,7 +1,7 @@
 defmodule JsonDiffEx.Mixfile do
   use Mix.Project
 
-  @version "0.6.1"
+  @version "0.6.2"
 
   def project do
     [app: :json_diff_ex,
