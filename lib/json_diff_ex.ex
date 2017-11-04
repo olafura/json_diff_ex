@@ -131,6 +131,11 @@ defmodule JsonDiffEx do
       {check, deleted} ->
         deleted_map = Enum.into(deleted, %{})
         all_checked(check, deleted_map, opts)
+        |> Enum.filter(fn
+          {_, nil} -> false
+          _ -> true
+        end)
+        |> Enum.into(%{})
     end
     if diff != %{} do
       diff
