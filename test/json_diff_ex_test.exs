@@ -285,4 +285,32 @@ defmodule JsonDiffExTest do
             "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"], "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]}
     comparediff_patch(s1, s2, diff1)
   end
+
+  test "change eleventh item in list" do
+    list = Enum.to_list(1..100)
+    {first, [original | rest]} = Enum.split(list, 10)
+    changed = original * -1
+
+    obj1 = %{"primitives" => list}
+    obj2 = %{"primitives" => first ++ [changed | rest]}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
+
+  test "change eleventh item in list of maps" do
+    list = Enum.map(1..100, fn num -> %{"val" => num} end)
+    {first, [original | rest]} = Enum.split(list, 10)
+    changed = Map.put(original, "value", "changed")
+
+    obj1 = %{"maps" => list}
+    obj2 = %{"maps" => first ++ [changed | rest]}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
 end
