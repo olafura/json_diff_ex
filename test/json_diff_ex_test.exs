@@ -313,4 +313,14 @@ defmodule JsonDiffExTest do
 
     assert patched == obj2
   end
+  
+  test "null fields are preserved after patching" do
+    obj1 = %{"name" => "original", "should_be_nil" => nil}
+    obj2 = %{"name" => "changed", "should_be_nil" => nil}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
 end
