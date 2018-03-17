@@ -68,6 +68,7 @@ defmodule JsonDiffEx do
   """
 
   @default_strict_equality true
+  @sentinel :json_diff_ex_sentinal_value
 
   @spec split_underscore_map({binary, list}) :: boolean
   defp split_underscore_map({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
@@ -259,10 +260,10 @@ defmodule JsonDiffEx do
               |> do_patch_list()
             false -> do_patch(v_map, v_diff)
           end
-        [1, 0, 0] -> nil
+        [1, 0, 0] -> @sentinel
       end
     end)
-    |> Enum.filter(fn({_k, v}) -> v !== nil end)
+    |> Enum.filter(fn({_k, v}) -> v !== @sentinel end)
     |> Enum.into(%{})
   end
 
