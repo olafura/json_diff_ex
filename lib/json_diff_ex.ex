@@ -71,7 +71,7 @@ defmodule JsonDiffEx do
   @sentinel :json_diff_ex_sentinal_value
 
   @spec split_underscore_map({binary, list}) :: boolean
-  defp split_underscore_map({<<"_", _>>, [value, 0, 0]}) when is_map(value) do
+  defp split_underscore_map({<<"_", _::binary>>, [value, 0, 0]}) when is_map(value) do
     false
   end
   defp split_underscore_map(_) do
@@ -79,7 +79,7 @@ defmodule JsonDiffEx do
   end
 
   @spec split_underscore({binary, list}) :: boolean
-  defp split_underscore({<<"_", _>>, [_, 0, 0]}) do
+  defp split_underscore({<<"_", _::binary>>, [_, 0, 0]}) do
     false
   end
 
