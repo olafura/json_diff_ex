@@ -285,4 +285,15 @@ defmodule JsonDiffExTest do
             "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"], "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]}
     comparediff_patch(s1, s2, diff1)
   end
+
+  test "null fields are preserved after patching" do
+    obj1 = %{"name" => "original", "should_be_nil" => nil}
+    obj2 = %{"name" => "changed", "should_be_nil" => nil}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
 end
