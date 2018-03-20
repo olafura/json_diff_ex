@@ -126,7 +126,7 @@ defmodule JsonDiffEx do
     end)
     |> elem(1)
 
-    diff = case Enum.split_while(new_list, &split_underscore_map/1) do
+    diff = case Enum.split_with(new_list, &split_underscore_map/1) do
       {[], []} -> new_list
       {_, []} -> new_list
       {check, deleted} ->
@@ -228,6 +228,7 @@ defmodule JsonDiffEx do
     |> Enum.map(fn
      {s_index, value} -> {String.to_integer(s_index), value}
     end)
+    |> Enum.sort_by(fn {idx, _v} -> idx end)
     |> Enum.reduce(new_list, fn
       {index, %{} = diff_map}, acc ->
         List.update_at(acc, index, &do_patch(&1, diff_map))

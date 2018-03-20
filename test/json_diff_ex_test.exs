@@ -313,10 +313,44 @@ defmodule JsonDiffExTest do
 
     assert patched == obj2
   end
-  
+
   test "null fields are preserved after patching" do
     obj1 = %{"name" => "original", "should_be_nil" => nil}
     obj2 = %{"name" => "changed", "should_be_nil" => nil}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
+
+  test "change items and add items in large list" do
+    list = Enum.map(1..1000, fn num -> %{"val" => num} end)
+    changed = %{"val" => "changed", "a_new_field" => true}
+
+    # Replace some values at random positions
+    new_list =
+      [1, 33, 127, 68, 374, 782, 683, 237, 912]
+      |> Enum.reduce(list, fn idx, acc ->
+        List.replace_at(acc, idx, changed)
+      end)
+
+    # Insert some new values at random positions
+    new_list =
+      [17, 112, 678, 234, 922, 63, 876, 5]
+      |> Enum.reduce(new_list, fn idx, acc ->
+        List.insert_at(acc, idx, changed)
+      end)
+
+    # Add some items to the end of the list
+    new_list =
+      1..20
+      |> Enum.reduce(new_list, fn _, acc ->
+        List.insert_at(acc, -1, changed)
+      end)
+
+    obj1 = %{"maps" => list}
+    obj2 = %{"maps" => new_list}
 
     diff = JsonDiffEx.diff(obj1, obj2)
     patched = JsonDiffEx.patch(obj1, diff)
