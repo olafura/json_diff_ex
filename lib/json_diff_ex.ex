@@ -71,20 +71,20 @@ defmodule JsonDiffEx do
   @sentinel :json_diff_ex_sentinal_value
 
   @spec split_underscore_map({binary, list}) :: boolean
-  defp split_underscore_map({<<"_", _::binary>>, [value, 0, 0]}) when is_map(value) do
-    false
+  defp split_underscore_map({<<"_", _::binary>>, [map, 0, 0]}) when is_map(map) do
+    true
   end
   defp split_underscore_map(_) do
-    true
+    false
   end
 
   @spec split_underscore({binary, list}) :: boolean
   defp split_underscore({<<"_", _::binary>>, [_, 0, 0]}) do
-    false
+    true
   end
 
   defp split_underscore(_) do
-    true
+    false
   end
 
 
@@ -128,8 +128,8 @@ defmodule JsonDiffEx do
 
     diff = case Enum.split_with(new_list, &split_underscore_map/1) do
       {[], []} -> new_list
-      {_, []} -> new_list
-      {check, deleted} ->
+      {[], _} -> new_list
+      {deleted, check} ->
         deleted_map = Enum.into(deleted, %{})
         all_checked(check, deleted_map, opts)
         |> Enum.filter(fn
@@ -199,12 +199,12 @@ defmodule JsonDiffEx do
   end
 
   defp do_patch_delete(list, diff) do
-    case Enum.split_while(diff, &split_underscore/1) do
+    case Enum.split_with(diff, &split_underscore/1) do
       {[], []} -> {list, diff}
-      {_, []} -> {list, diff}
-      {check, deleted} ->
+      {[], _} -> {list, diff}
+      {deleted, check} ->
         delete_list = Enum.map(deleted, fn
-          {"_" <> s_index, _} -> String.to_integer(s_index)
+          {<<"_", s_index::binary>>, _} -> String.to_integer(s_index)
         end)
 
         filtered_list = Enum.filter(list, fn
@@ -248,8 +248,9 @@ defmodule JsonDiffEx do
     end)
     |> Enum.into(%{})
     Map.merge(map1, diff2, fn(_k, v_map, v_diff) ->
-      case v_diff do
-        [^v_map, new_value] -> new_value
+      {v_map_compare, v_diff_compare} = correct_lists(v_map, v_diff)
+      case v_diff_compare do
+        [^v_map_compare, new_value] -> new_value
         new_map when is_map(new_map) ->
           case Map.get(new_map, "_t", false) === "a" do
             true ->
@@ -261,11 +262,18 @@ defmodule JsonDiffEx do
               |> do_patch_list()
             false -> do_patch(v_map, v_diff)
           end
-        [1, 0, 0] -> @sentinel
+        [_, 0, 0] -> @sentinel
       end
     end)
     |> Enum.filter(fn({_k, v}) -> v !== @sentinel end)
     |> Enum.into(%{})
+  end
+
+  defp correct_lists(map, [diff_key, diff_new]) when is_list(map) and is_list(diff_key) do
+    {Enum.join(map, "---"), [Enum.join(diff_key, "---"), diff_new]}
+  end
+  defp correct_lists(map, diff) do
+    {map, diff}
   end
 
   @doc """
