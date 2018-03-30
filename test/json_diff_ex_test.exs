@@ -357,4 +357,17 @@ defmodule JsonDiffExTest do
 
     assert patched == obj2
   end
+
+  @tag :skip
+  test "Random data" do
+    list1 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(100))
+    list2 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(100))
+    obj1 = %{"a" => list1}
+    obj2 = %{"a" => list2}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    assert patched == obj2
+  end
 end

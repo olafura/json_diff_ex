@@ -1,7 +1,7 @@
 defmodule JsonDiffEx.Mixfile do
   use Mix.Project
 
-  @version "0.6.4"
+  @version "0.6.5"
 
   def project do
     [app: :json_diff_ex,
@@ -30,12 +30,15 @@ defmodule JsonDiffEx.Mixfile do
   end
 
   defp deps do
-    [{:poison, "~> 3.1", only: [:dev, :test]},
-     {:credo, "~> 0.8", only: :dev},
-     {:earmark, "~> 1.2", only: :dev},
-     {:ex_doc, "~> 0.16", only: :dev},
-     {:coverex, "~> 1.4", only: :test},
-     {:httpoison, "~> 1.0", only: :test},
-     {:eep, git: "https://github.com/virtan/eep.git", only: :test}]
+    [
+      {:poison, "~> 3.1", only: [:dev, :test]},
+      {:credo, "~> 0.8", only: :dev},
+      {:earmark, "~> 1.2", only: :dev},
+      {:ex_doc, "~> 0.16", only: :dev},
+      {:coverex, "~> 1.4", only: :test},
+      {:httpoison, "~> 1.0", only: :test},
+      {:eep, git: "https://github.com/virtan/eep.git", only: :test},
+      {:stream_data, "~> 0.1", only: :test},
+    ]
   end
 end
