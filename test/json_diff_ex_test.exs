@@ -367,7 +367,22 @@ defmodule JsonDiffExTest do
 
     diff = JsonDiffEx.diff(obj1, obj2)
     patched = JsonDiffEx.patch(obj1, diff)
+    diff_patched = JsonDiffEx.diff(patched, obj2)
+    if diff_patched !== %{} do
+      keys =
+        diff_patched
+        |> Map.get("a")
+        |> Map.keys()
+        |> Enum.filter(fn key -> key !== "_t" end)
+        |> Enum.map(&(&1))
 
-    assert patched == obj2
+      Enum.map(keys, fn key ->
+        IO.inspect(["a", key], label: :path)
+        IO.puts("obj1: #{inspect(obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)), limit: 100000, printable_limit: 1000000000)}")
+        IO.puts("obj2: #{inspect(obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)), limit: 100000, printable_limit: 1000000000)}")
+        IO.puts("diff: #{inspect(diff |> Map.get("a") |> Map.get(key))}")
+      end)
+    end
+    assert diff_patched == %{}
   end
 end
