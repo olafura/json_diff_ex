@@ -358,6 +358,21 @@ defmodule JsonDiffExTest do
     assert patched == obj2
   end
 
+  @tag :failing
+  test "complex list check" do
+    obj1 = %{"4" => [4, 18, -4, 18, 3]}
+    obj2 = %{"4" => [20, -3, 9, -12, 16, 11, 6, -8, -18, 7, -4]}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+    patched = JsonDiffEx.patch(obj1, diff)
+
+    s1 = Poison.encode!(obj1)
+    s2 = Poison.encode!(obj2)
+
+    assert patched == obj2
+    assert diff == JsHelp.diff(s1, s2)
+  end
+
   @tag :skip
   test "Random data" do
     list1 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(100))
@@ -384,5 +399,17 @@ defmodule JsonDiffExTest do
       end)
     end
     assert diff_patched == %{}
+  end
+
+  @tag :skip
+  test "Random data compare js" do
+    list1 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(1000))
+    list2 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(1000))
+    obj1 = %{"a" => list1}
+    obj2 = %{"a" => list2}
+
+    diff = JsonDiffEx.diff(obj1, obj2)
+
+    assert diff == JsHelp.diff(Poison.encode!(obj1), Poison.encode!(obj2))
   end
 end
