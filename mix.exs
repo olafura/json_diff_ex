@@ -4,16 +4,18 @@ defmodule JsonDiffEx.Mixfile do
   @version "0.6.5"
 
   def project do
-    [app: :json_diff_ex,
-     version: @version,
-     description: "Diff and patch for JSON in Elixir",
-     package: package(),
-     docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
-     test_coverage: [tool: Coverex.Task],
-     elixir: "~> 1.4",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      app: :json_diff_ex,
+      version: @version,
+      description: "Diff and patch for JSON in Elixir",
+      package: package(),
+      docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
+      test_coverage: [tool: Coverex.Task],
+      elixir: "~> 1.4",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   defp package do
@@ -38,7 +40,7 @@ defmodule JsonDiffEx.Mixfile do
       {:coverex, "~> 1.4", only: :test},
       {:httpoison, "~> 1.0", only: :test},
       {:eep, git: "https://github.com/virtan/eep.git", only: :test},
-      {:stream_data, "~> 0.1", only: :test},
+      {:stream_data, "~> 0.1", only: :test}
     ]
   end
 end
