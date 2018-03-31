@@ -11,6 +11,7 @@ defmodule JsonDiffExTest do
   def comparediff(s1, s2, diff_res) do
     j1 = Poison.decode!(s1)
     j2 = Poison.decode!(s2)
+
     case @speed_test do
       true -> assert diff(j1, j2) == diff_res
       false -> assert diff(j1, j2) == JsHelp.diff(s1, s2)
@@ -20,8 +21,11 @@ defmodule JsonDiffExTest do
   def comparediff_patch(s1, s2, diff1) do
     j1 = Poison.decode!(s1)
     j2 = Poison.decode!(s2)
+
     case @speed_test do
-      true -> assert patch(j1, diff1) == j2
+      true ->
+        assert patch(j1, diff1) == j2
+
       false ->
         assert patch(j1, diff(j1, j2)) == j2
     end
@@ -65,17 +69,29 @@ defmodule JsonDiffExTest do
   test "check array diff all changed" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [4,5,6]})
-    res = %{"1" => %{"0" => [4], "1" => [5], "2" => [6], "_0" => [1, 0, 0], "_1" => [2, 0, 0], "_2" => [3, 0, 0], "_t" => "a"}}
+
+    res = %{
+      "1" => %{
+        "0" => [4],
+        "1" => [5],
+        "2" => [6],
+        "_0" => [1, 0, 0],
+        "_1" => [2, 0, 0],
+        "_2" => [3, 0, 0],
+        "_t" => "a"
+      }
+    }
+
     comparediff(s1, s2, res)
   end
 
-#  jsondiffpatch does things a little different
-#  test "check array diff reorder" do
-#    s1 = ~s({"1": [1,2,3]})
-#    s2 = ~s({"1": [3,2,1]})
-#    res = %{"1" => %{"_0" => ["", 2, 3], "_2" => ["", 0, 3], "_t" => "a"}}
-#    comparediff(s1, s2, res)
-#  end
+  #  jsondiffpatch does things a little different
+  #  test "check array diff reorder" do
+  #    s1 = ~s({"1": [1,2,3]})
+  #    s2 = ~s({"1": [3,2,1]})
+  #    res = %{"1" => %{"_0" => ["", 2, 3], "_2" => ["", 0, 3], "_t" => "a"}}
+  #    comparediff(s1, s2, res)
+  #  end
 
   test "check array diff delete first" do
     s1 = ~s({"1": [1,2,3]})
@@ -84,7 +100,7 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
- test "check array diff shift one" do
+  test "check array diff shift one" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [0,1,2,3]})
     res = %{"1" => %{"0" => [0], "_t" => "a"}}
@@ -115,7 +131,11 @@ defmodule JsonDiffExTest do
   test "check object with muliple values plus in array diff" do
     s1 = ~s({"1": [{"1":1,"2":2},{"3":3,"4":4}]})
     s2 = ~s({"1": [{"1":2,"2":2},{"3":5,"4":6}]})
-    res = %{"1" => %{"0" => %{"1" => [1, 2]}, "1" => %{"3" => [3, 5], "4" => [4, 6]}, "_t" => "a"}}
+
+    res = %{
+      "1" => %{"0" => %{"1" => [1, 2]}, "1" => %{"3" => [3, 5], "4" => [4, 6]}, "_t" => "a"}
+    }
+
     comparediff(s1, s2, res)
   end
 
@@ -126,33 +146,66 @@ defmodule JsonDiffExTest do
     comparediff(s1, s2, res)
   end
 
-# Might be a bug in jsondiffpatch
-#  test "check deleted value with object in array diff" do
-#    s1 = ~s({"1": [1,{"1":1}]})
-#    s2 = ~s({"1": [{"1":1}]})
-#    res = %{"1" => %{"_0" => [1, 0, 0], "_t" => "a"}}
-#    comparediff(s1, s2, res)
-#  end
+  # Might be a bug in jsondiffpatch
+  #  test "check deleted value with object in array diff" do
+  #    s1 = ~s({"1": [1,{"1":1}]})
+  #    s2 = ~s({"1": [{"1":1}]})
+  #    res = %{"1" => %{"_0" => [1, 0, 0], "_t" => "a"}}
+  #    comparediff(s1, s2, res)
+  #  end
 
   test "check deleted value with object with change in array diff" do
     s1 = ~s({"1": [1,{"1":1}]})
     s2 = ~s({"1": [{"1":2}]})
-    res = %{"1" => %{"0" => [%{"1" => 2}], "_0" => [1, 0, 0], "_1" => [%{"1" => 1}, 0, 0], "_t" => "a"}}
+
+    res = %{
+      "1" => %{"0" => [%{"1" => 2}], "_0" => [1, 0, 0], "_1" => [%{"1" => 1}, 0, 0], "_t" => "a"}
+    }
+
     comparediff(s1, s2, res)
   end
 
   test "check bigger diff" do
     s1 = @big_json1
     s2 = @big_json2
-    res = %{"_id" => ["56353d1bca16dd7354045f7f", "56353d1bec3821c78ad14479"],
-            "about" => ["Laborum cupidatat proident deserunt fugiat aliquip deserunt. Mollit deserunt amet ut tempor veniam qui. Nulla ipsum non nostrud ut magna excepteur nulla non cupidatat magna ipsum.\r\n",
-            "Consequat ullamco proident anim sunt ipsum esse Lorem tempor pariatur. Nostrud officia mollit aliqua sit consectetur sint minim veniam proident labore anim incididunt ex. Est amet laboris pariatur ut id qui et.\r\n"],
-            "address" => ["265 Sutton Street, Tioga, Hawaii, 9975", "919 Lefferts Avenue, Winchester, Colorado, 2905"], "age" => [21, 29], "balance" => ["$1,343.75", "$3,273.15"], "company" => ["RAMJOB", "ANDRYX"],
-            "email" => ["eleanorbaxter@ramjob.com", "talleyreyes@andryx.com"], "eyeColor" => ["brown", "blue"], "favoriteFruit" => ["apple", "banana"], "gender" => ["female", "male"],
-            "friends" => %{"0" => %{"name" => ["Larsen Sawyer", "Shelby Barrett"]}, "1" => %{"name" => ["Frost Carey", "Gloria Mccray"]}, "2" => %{"name" => ["Irene Lee", "Hopper Luna"]}, "_t" => "a"},
-            "greeting" => ["Hello, Eleanor Baxter! You have 8 unread messages.", "Hello, Talley Reyes! You have 2 unread messages."], "guid" => ["809e01c1-b8c4-4d49-a9e7-204091cd6ae8", "b2b50dae-5d30-4514-82b1-26714d91e264"],
-            "index" => [0, 1], "isActive" => [true, false], "latitude" => [-44.600585, 39.655822], "longitude" => [-9.257008, -70.899696], "name" => ["Eleanor Baxter", "Talley Reyes"],
-            "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"], "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]}
+
+    res = %{
+      "_id" => ["56353d1bca16dd7354045f7f", "56353d1bec3821c78ad14479"],
+      "about" => [
+        "Laborum cupidatat proident deserunt fugiat aliquip deserunt. Mollit deserunt amet ut tempor veniam qui. Nulla ipsum non nostrud ut magna excepteur nulla non cupidatat magna ipsum.\r\n",
+        "Consequat ullamco proident anim sunt ipsum esse Lorem tempor pariatur. Nostrud officia mollit aliqua sit consectetur sint minim veniam proident labore anim incididunt ex. Est amet laboris pariatur ut id qui et.\r\n"
+      ],
+      "address" => [
+        "265 Sutton Street, Tioga, Hawaii, 9975",
+        "919 Lefferts Avenue, Winchester, Colorado, 2905"
+      ],
+      "age" => [21, 29],
+      "balance" => ["$1,343.75", "$3,273.15"],
+      "company" => ["RAMJOB", "ANDRYX"],
+      "email" => ["eleanorbaxter@ramjob.com", "talleyreyes@andryx.com"],
+      "eyeColor" => ["brown", "blue"],
+      "favoriteFruit" => ["apple", "banana"],
+      "gender" => ["female", "male"],
+      "friends" => %{
+        "0" => %{"name" => ["Larsen Sawyer", "Shelby Barrett"]},
+        "1" => %{"name" => ["Frost Carey", "Gloria Mccray"]},
+        "2" => %{"name" => ["Irene Lee", "Hopper Luna"]},
+        "_t" => "a"
+      },
+      "greeting" => [
+        "Hello, Eleanor Baxter! You have 8 unread messages.",
+        "Hello, Talley Reyes! You have 2 unread messages."
+      ],
+      "guid" => ["809e01c1-b8c4-4d49-a9e7-204091cd6ae8", "b2b50dae-5d30-4514-82b1-26714d91e264"],
+      "index" => [0, 1],
+      "isActive" => [true, false],
+      "latitude" => [-44.600585, 39.655822],
+      "longitude" => [-9.257008, -70.899696],
+      "name" => ["Eleanor Baxter", "Talley Reyes"],
+      "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"],
+      "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]
+    }
+
     comparediff(s1, s2, res)
   end
 
@@ -197,7 +250,19 @@ defmodule JsonDiffExTest do
   test "check array patch all changed" do
     s1 = ~s({"1": [1,2,3]})
     s2 = ~s({"1": [4,5,6]})
-    diff1 = %{"1" => %{"0" => [4], "1" => [5], "2" => [6], "_0" => [1, 0, 0], "_1" => [2, 0, 0], "_2" => [3, 0, 0], "_t" => "a"}}
+
+    diff1 = %{
+      "1" => %{
+        "0" => [4],
+        "1" => [5],
+        "2" => [6],
+        "_0" => [1, 0, 0],
+        "_1" => [2, 0, 0],
+        "_2" => [3, 0, 0],
+        "_t" => "a"
+      }
+    }
+
     comparediff_patch(s1, s2, diff1)
   end
 
@@ -223,10 +288,10 @@ defmodule JsonDiffExTest do
   end
 
   test "check array patch shift one inside" do
-   s1 = ~s({"1": [1,2,3]})
-   s2 = ~s({"1": [1,2,0,3]})
-   diff1 = %{"1" => %{"3" => [0], "_t" => "a"}}
-   comparediff_patch(s1, s2, diff1)
+    s1 = ~s({"1": [1,2,3]})
+    s2 = ~s({"1": [1,2,0,3]})
+    diff1 = %{"1" => %{"3" => [0], "_t" => "a"}}
+    comparediff_patch(s1, s2, diff1)
   end
 
   test "check object in array patch" do
@@ -246,7 +311,11 @@ defmodule JsonDiffExTest do
   test "check deleted value with object with change in array patch" do
     s1 = ~s({"1": [1,{"1":1}]})
     s2 = ~s({"1": [{"1":2}]})
-    diff1 = %{"1" => %{"0" => [%{"1" => 2}], "_0" => [1, 0, 0], "_1" => [%{"1" => 1}, 0, 0], "_t" => "a"}}
+
+    diff1 = %{
+      "1" => %{"0" => [%{"1" => 2}], "_0" => [1, 0, 0], "_1" => [%{"1" => 1}, 0, 0], "_t" => "a"}
+    }
+
     comparediff_patch(s1, s2, diff1)
   end
 
@@ -270,19 +339,47 @@ defmodule JsonDiffExTest do
     comparediff_patch(s1, s2, diff1)
   end
 
-
   test "check bigger patch" do
     s1 = @big_json1
     s2 = @big_json2
-    diff1 = %{"_id" => ["56353d1bca16dd7354045f7f", "56353d1bec3821c78ad14479"],
-            "about" => ["Laborum cupidatat proident deserunt fugiat aliquip deserunt. Mollit deserunt amet ut tempor veniam qui. Nulla ipsum non nostrud ut magna excepteur nulla non cupidatat magna ipsum.\r\n",
-            "Consequat ullamco proident anim sunt ipsum esse Lorem tempor pariatur. Nostrud officia mollit aliqua sit consectetur sint minim veniam proident labore anim incididunt ex. Est amet laboris pariatur ut id qui et.\r\n"],
-            "address" => ["265 Sutton Street, Tioga, Hawaii, 9975", "919 Lefferts Avenue, Winchester, Colorado, 2905"], "age" => [21, 29], "balance" => ["$1,343.75", "$3,273.15"], "company" => ["RAMJOB", "ANDRYX"],
-            "email" => ["eleanorbaxter@ramjob.com", "talleyreyes@andryx.com"], "eyeColor" => ["brown", "blue"], "favoriteFruit" => ["apple", "banana"], "gender" => ["female", "male"],
-            "friends" => %{"0" => %{"name" => ["Larsen Sawyer", "Shelby Barrett"]}, "1" => %{"name" => ["Frost Carey", "Gloria Mccray"]}, "2" => %{"name" => ["Irene Lee", "Hopper Luna"]}, "_t" => "a"},
-            "greeting" => ["Hello, Eleanor Baxter! You have 8 unread messages.", "Hello, Talley Reyes! You have 2 unread messages."], "guid" => ["809e01c1-b8c4-4d49-a9e7-204091cd6ae8", "b2b50dae-5d30-4514-82b1-26714d91e264"],
-            "index" => [0, 1], "isActive" => [true, false], "latitude" => [-44.600585, 39.655822], "longitude" => [-9.257008, -70.899696], "name" => ["Eleanor Baxter", "Talley Reyes"],
-            "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"], "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]}
+
+    diff1 = %{
+      "_id" => ["56353d1bca16dd7354045f7f", "56353d1bec3821c78ad14479"],
+      "about" => [
+        "Laborum cupidatat proident deserunt fugiat aliquip deserunt. Mollit deserunt amet ut tempor veniam qui. Nulla ipsum non nostrud ut magna excepteur nulla non cupidatat magna ipsum.\r\n",
+        "Consequat ullamco proident anim sunt ipsum esse Lorem tempor pariatur. Nostrud officia mollit aliqua sit consectetur sint minim veniam proident labore anim incididunt ex. Est amet laboris pariatur ut id qui et.\r\n"
+      ],
+      "address" => [
+        "265 Sutton Street, Tioga, Hawaii, 9975",
+        "919 Lefferts Avenue, Winchester, Colorado, 2905"
+      ],
+      "age" => [21, 29],
+      "balance" => ["$1,343.75", "$3,273.15"],
+      "company" => ["RAMJOB", "ANDRYX"],
+      "email" => ["eleanorbaxter@ramjob.com", "talleyreyes@andryx.com"],
+      "eyeColor" => ["brown", "blue"],
+      "favoriteFruit" => ["apple", "banana"],
+      "gender" => ["female", "male"],
+      "friends" => %{
+        "0" => %{"name" => ["Larsen Sawyer", "Shelby Barrett"]},
+        "1" => %{"name" => ["Frost Carey", "Gloria Mccray"]},
+        "2" => %{"name" => ["Irene Lee", "Hopper Luna"]},
+        "_t" => "a"
+      },
+      "greeting" => [
+        "Hello, Eleanor Baxter! You have 8 unread messages.",
+        "Hello, Talley Reyes! You have 2 unread messages."
+      ],
+      "guid" => ["809e01c1-b8c4-4d49-a9e7-204091cd6ae8", "b2b50dae-5d30-4514-82b1-26714d91e264"],
+      "index" => [0, 1],
+      "isActive" => [true, false],
+      "latitude" => [-44.600585, 39.655822],
+      "longitude" => [-9.257008, -70.899696],
+      "name" => ["Eleanor Baxter", "Talley Reyes"],
+      "phone" => ["+1 (876) 456-3989", "+1 (895) 435-3714"],
+      "registered" => ["2014-07-20T11:36:42 +04:00", "2015-03-11T11:45:43 +04:00"]
+    }
+
     comparediff_patch(s1, s2, diff1)
   end
 
@@ -332,22 +429,22 @@ defmodule JsonDiffExTest do
     new_list =
       [1, 33, 127, 68, 374, 782, 683, 237, 912]
       |> Enum.reduce(list, fn idx, acc ->
-        List.replace_at(acc, idx, changed)
-      end)
+           List.replace_at(acc, idx, changed)
+         end)
 
     # Insert some new values at random positions
     new_list =
       [17, 112, 678, 234, 922, 63, 876, 5]
       |> Enum.reduce(new_list, fn idx, acc ->
-        List.insert_at(acc, idx, changed)
-      end)
+           List.insert_at(acc, idx, changed)
+         end)
 
     # Add some items to the end of the list
     new_list =
       1..20
       |> Enum.reduce(new_list, fn _, acc ->
-        List.insert_at(acc, -1, changed)
-      end)
+           List.insert_at(acc, -1, changed)
+         end)
 
     obj1 = %{"maps" => list}
     obj2 = %{"maps" => new_list}
@@ -375,36 +472,85 @@ defmodule JsonDiffExTest do
 
   @tag :skip
   test "Random data" do
-    list1 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(100))
-    list2 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(100))
+    list1 =
+      StreamData.map_of(
+        StreamData.string(:alphanumeric, min_length: 1),
+        StreamData.list_of(StreamData.integer(), min_length: 1),
+        min_length: 1
+      )
+      |> Enum.take(:rand.uniform(100))
+
+    list2 =
+      StreamData.map_of(
+        StreamData.string(:alphanumeric, min_length: 1),
+        StreamData.list_of(StreamData.integer(), min_length: 1),
+        min_length: 1
+      )
+      |> Enum.take(:rand.uniform(100))
+
     obj1 = %{"a" => list1}
     obj2 = %{"a" => list2}
 
     diff = JsonDiffEx.diff(obj1, obj2)
     patched = JsonDiffEx.patch(obj1, diff)
     diff_patched = JsonDiffEx.diff(patched, obj2)
+
     if diff_patched !== %{} do
       keys =
         diff_patched
         |> Map.get("a")
         |> Map.keys()
         |> Enum.filter(fn key -> key !== "_t" end)
-        |> Enum.map(&(&1))
+        |> Enum.map(& &1)
 
       Enum.map(keys, fn key ->
         IO.inspect(["a", key], label: :path)
-        IO.puts("obj1: #{inspect(obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)), limit: 100000, printable_limit: 1000000000)}")
-        IO.puts("obj2: #{inspect(obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)), limit: 100000, printable_limit: 1000000000)}")
+
+        IO.puts(
+          "obj1: #{
+            inspect(
+              obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+              limit: 100_000,
+              printable_limit: 1_000_000_000
+            )
+          }"
+        )
+
+        IO.puts(
+          "obj2: #{
+            inspect(
+              obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+              limit: 100_000,
+              printable_limit: 1_000_000_000
+            )
+          }"
+        )
+
         IO.puts("diff: #{inspect(diff |> Map.get("a") |> Map.get(key))}")
       end)
     end
+
     assert diff_patched == %{}
   end
 
   @tag :skip
   test "Random data compare js" do
-    list1 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(1000))
-    list2 = StreamData.map_of(StreamData.string(:alphanumeric, min_length: 1), StreamData.list_of(StreamData.integer(), min_length: 1), min_length: 1) |> Enum.take(:rand.uniform(1000))
+    list1 =
+      StreamData.map_of(
+        StreamData.string(:alphanumeric, min_length: 1),
+        StreamData.list_of(StreamData.integer(), min_length: 1),
+        min_length: 1
+      )
+      |> Enum.take(:rand.uniform(1000))
+
+    list2 =
+      StreamData.map_of(
+        StreamData.string(:alphanumeric, min_length: 1),
+        StreamData.list_of(StreamData.integer(), min_length: 1),
+        min_length: 1
+      )
+      |> Enum.take(:rand.uniform(1000))
+
     obj1 = %{"a" => list1}
     obj2 = %{"a" => list2}
 
