@@ -117,7 +117,8 @@ defmodule JsonDiffEx do
   @spec do_diff(list, list, list) :: map | nil
   defp do_diff(l1, l2, opts) when is_list(l1) and is_list(l2) do
     new_list =
-      List.myers_difference(l1, l2)
+      l1
+      |> List.myers_difference(l2)
       |> Enum.reduce({0, %{}}, fn
            {:eq, equal}, {count, acc} ->
              {count + length(equal), acc}
@@ -151,7 +152,8 @@ defmodule JsonDiffEx do
         {deleted, check} ->
           deleted_map = Enum.into(deleted, %{})
 
-          all_checked(check, deleted_map, opts)
+          check
+          |> all_checked(deleted_map, opts)
           |> Enum.filter(fn
                {_, nil} -> false
                _ -> true
@@ -239,7 +241,8 @@ defmodule JsonDiffEx do
           Enum.map(deleted, fn {<<"_", s_index::binary>>, _} -> String.to_integer(s_index) end)
 
         filtered_list =
-          Enum.filter(list, fn {_, index} -> index not in delete_list end)
+          list
+          |> Enum.filter(fn {_, index} -> index not in delete_list end)
           |> clean_index()
           |> Enum.with_index()
 
@@ -280,33 +283,36 @@ defmodule JsonDiffEx do
          end)
       |> Enum.into(%{})
 
-    Map.merge(map1, diff2, fn _k, v_map, v_diff ->
-      {v_map_compare, v_diff_compare} = correct_lists(v_map, v_diff)
-
-      case v_diff_compare do
-        [^v_map_compare, new_value] ->
-          new_value
-
-        new_map when is_map(new_map) ->
-          case Map.get(new_map, "_t", false) === "a" do
-            true ->
-              v_diff2 = Map.delete(v_diff, "_t")
-
-              v_map
-              |> Enum.with_index()
-              |> do_patch_delete(v_diff2)
-              |> do_patch_list()
-
-            false ->
-              do_patch(v_map, v_diff)
-          end
-
-        [_, 0, 0] ->
-          @sentinel
-      end
-    end)
+    map1
+    |> Map.merge(diff2, &do_patch_merge/3)
     |> Enum.filter(fn {_k, v} -> v !== @sentinel end)
     |> Enum.into(%{})
+  end
+
+  defp do_patch_merge(_k, v_map, v_diff) do
+    {v_map_compare, v_diff_compare} = correct_lists(v_map, v_diff)
+
+    case v_diff_compare do
+      [^v_map_compare, new_value] ->
+        new_value
+
+      new_map when is_map(new_map) ->
+        case Map.get(new_map, "_t", false) === "a" do
+          true ->
+            v_diff2 = Map.delete(v_diff, "_t")
+
+            v_map
+            |> Enum.with_index()
+            |> do_patch_delete(v_diff2)
+            |> do_patch_list()
+
+          false ->
+            do_patch(v_map, v_diff)
+        end
+
+      [_, 0, 0] ->
+        @sentinel
+    end
   end
 
   defp correct_lists(map, [diff_key, diff_new]) when is_list(map) and is_list(diff_key) do
