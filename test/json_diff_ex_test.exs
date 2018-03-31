@@ -504,7 +504,7 @@ defmodule JsonDiffExTest do
         |> Enum.map(& &1)
 
       Enum.map(keys, fn key ->
-        IO.inspect(["a", key], label: :path)
+        IO.puts("Path: #{inspect(["a", key])}")
 
         IO.puts(
           "obj1: #{
