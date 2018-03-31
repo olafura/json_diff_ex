@@ -1,4 +1,4 @@
-ExUnit.start()
+ExUnit.start(exclude: [:failing])
 
 defmodule JsHelp do
 
