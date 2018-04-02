@@ -455,7 +455,6 @@ defmodule JsonDiffExTest do
     assert patched == obj2
   end
 
-  @tag :failing
   test "complex list check" do
     obj1 = %{"4" => [4, 18, -4, 18, 3]}
     obj2 = %{"4" => [20, -3, 9, -12, 16, 11, 6, -8, -18, 7, -4]}
@@ -466,8 +465,8 @@ defmodule JsonDiffExTest do
     s1 = Poison.encode!(obj1)
     s2 = Poison.encode!(obj2)
 
-    assert patched == obj2
     assert diff == JsHelp.diff(s1, s2)
+    assert patched == obj2
   end
 
   @tag :skip

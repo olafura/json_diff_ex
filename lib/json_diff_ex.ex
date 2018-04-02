@@ -119,27 +119,28 @@ defmodule JsonDiffEx do
     new_list =
       l1
       |> List.myers_difference(l2)
-      |> Enum.reduce({0, %{}}, fn
-           {:eq, equal}, {count, acc} ->
-             {count + length(equal), acc}
+      |> Enum.reduce({0, 0, %{}}, fn
+           {:eq, equal}, {count, delete_count, acc} ->
+             equal_length = length(equal)
+             {count + equal_length, delete_count + equal_length, acc}
 
-           {:del, deleted_list}, {count, acc} ->
-             {_, acc3} =
-               Enum.reduce(deleted_list, {count, acc}, fn deleted_item, {count2, acc2} ->
+           {:del, deleted_list}, {count, delete_count, acc} ->
+             {delete_count, acc3} =
+               Enum.reduce(deleted_list, {delete_count, acc}, fn deleted_item, {count2, acc2} ->
                  {
                    count2 + 1,
                    Map.put(acc2, "_" <> Integer.to_string(count2), [deleted_item, 0, 0])
                  }
                end)
 
-             {count, acc3}
+             {count, delete_count, acc3}
 
-           {:ins, inserted_list}, {count, acc} ->
-             Enum.reduce(inserted_list, {count, acc}, fn inserted_item, {count2, acc2} ->
-               {count2 + 1, Map.put(acc2, Integer.to_string(count2), [inserted_item])}
+           {:ins, inserted_list}, {count, delete_count, acc} ->
+             Enum.reduce(inserted_list, {count, delete_count, acc}, fn inserted_item, {count2, _, acc2} ->
+               {count2 + 1, delete_count, Map.put(acc2, Integer.to_string(count2), [inserted_item])}
              end)
          end)
-      |> elem(1)
+      |> elem(2)
 
     diff =
       case Enum.split_with(new_list, &split_underscore_map/1) do
