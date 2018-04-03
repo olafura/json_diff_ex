@@ -594,6 +594,6 @@ defmodule JsonDiffExTest do
       end)
     end
 
-    assert diff_js_elixir = %{}
+    assert diff_js_elixir == %{}
   end
 end
