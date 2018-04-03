@@ -470,6 +470,7 @@ defmodule JsonDiffExTest do
   end
 
   @tag :skip
+  @tag timeout: 100000
   test "Random data" do
     list1 =
       StreamData.map_of(
@@ -477,7 +478,7 @@ defmodule JsonDiffExTest do
         StreamData.list_of(StreamData.integer(), min_length: 1),
         min_length: 1
       )
-      |> Enum.take(:rand.uniform(100))
+      |> Enum.take(:rand.uniform(1000))
 
     list2 =
       StreamData.map_of(
@@ -485,7 +486,7 @@ defmodule JsonDiffExTest do
         StreamData.list_of(StreamData.integer(), min_length: 1),
         min_length: 1
       )
-      |> Enum.take(:rand.uniform(100))
+      |> Enum.take(:rand.uniform(1000))
 
     obj1 = %{"a" => list1}
     obj2 = %{"a" => list2}
@@ -540,7 +541,7 @@ defmodule JsonDiffExTest do
         StreamData.list_of(StreamData.integer(), min_length: 1),
         min_length: 1
       )
-      |> Enum.take(:rand.uniform(1000))
+      |> Enum.take(:rand.uniform(60))
 
     list2 =
       StreamData.map_of(
@@ -548,13 +549,51 @@ defmodule JsonDiffExTest do
         StreamData.list_of(StreamData.integer(), min_length: 1),
         min_length: 1
       )
-      |> Enum.take(:rand.uniform(1000))
+      |> Enum.take(:rand.uniform(60))
 
     obj1 = %{"a" => list1}
     obj2 = %{"a" => list2}
 
     diff = JsonDiffEx.diff(obj1, obj2)
+    diff_js = JsHelp.diff(Poison.encode!(obj1), Poison.encode!(obj2))
+    diff_js_elixir = JsonDiffEx.diff(diff, diff_js)
 
-    assert diff == JsHelp.diff(Poison.encode!(obj1), Poison.encode!(obj2))
+    if diff_js_elixir !== %{} do
+      keys =
+        diff_js_elixir
+        |> Map.get("a")
+        |> Map.keys()
+        |> Enum.filter(fn key -> key !== "_t" end)
+        |> Enum.map(& &1)
+
+      Enum.map(keys, fn key ->
+        IO.puts("Path: #{inspect(["a", key])}")
+
+        IO.puts(
+          "obj1: #{
+            inspect(
+              obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+              limit: 100_000,
+              printable_limit: 1_000_000_000
+            )
+          }"
+        )
+
+        IO.puts(
+          "obj2: #{
+            inspect(
+              obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+              limit: 100_000,
+              printable_limit: 1_000_000_000
+            )
+          }"
+        )
+
+        IO.puts("diff: #{inspect(diff |> Map.get("a") |> Map.get(key))}")
+        IO.puts("diff_js: #{inspect(diff_js |> Map.get("a") |> Map.get(key))}")
+      end)
+    end
+
+    assert diff_js_elixir = %{}
   end
 end
