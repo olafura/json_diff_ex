@@ -120,26 +120,27 @@ defmodule JsonDiffEx do
       l1
       |> List.myers_difference(l2)
       |> Enum.reduce({0, 0, %{}}, fn
-           {:eq, equal}, {count, delete_count, acc} ->
-             equal_length = length(equal)
-             {count + equal_length, delete_count + equal_length, acc}
+        {:eq, equal}, {count, delete_count, acc} ->
+          equal_length = length(equal)
+          {count + equal_length, delete_count + equal_length, acc}
 
-           {:del, deleted_list}, {count, delete_count, acc} ->
-             {delete_count, acc3} =
-               Enum.reduce(deleted_list, {delete_count, acc}, fn deleted_item, {count2, acc2} ->
-                 {
-                   count2 + 1,
-                   Map.put(acc2, "_" <> Integer.to_string(count2), [deleted_item, 0, 0])
-                 }
-               end)
+        {:del, deleted_list}, {count, delete_count, acc} ->
+          {delete_count, acc3} =
+            Enum.reduce(deleted_list, {delete_count, acc}, fn deleted_item, {count2, acc2} ->
+              {
+                count2 + 1,
+                Map.put(acc2, "_" <> Integer.to_string(count2), [deleted_item, 0, 0])
+              }
+            end)
 
-             {count, delete_count, acc3}
+          {count, delete_count, acc3}
 
-           {:ins, inserted_list}, {count, delete_count, acc} ->
-             Enum.reduce(inserted_list, {count, delete_count, acc}, fn inserted_item, {count2, _, acc2} ->
-               {count2 + 1, delete_count, Map.put(acc2, Integer.to_string(count2), [inserted_item])}
-             end)
-         end)
+        {:ins, inserted_list}, {count, delete_count, acc} ->
+          Enum.reduce(inserted_list, {count, delete_count, acc}, fn inserted_item,
+                                                                    {count2, _, acc2} ->
+            {count2 + 1, delete_count, Map.put(acc2, Integer.to_string(count2), [inserted_item])}
+          end)
+      end)
       |> elem(2)
 
     diff =
@@ -156,9 +157,9 @@ defmodule JsonDiffEx do
           check
           |> all_checked(deleted_map, opts)
           |> Enum.filter(fn
-               {_, nil} -> false
-               _ -> true
-             end)
+            {_, nil} -> false
+            _ -> true
+          end)
           |> Map.new()
       end
 
@@ -195,17 +196,17 @@ defmodule JsonDiffEx do
       keys_non_uniq
       |> Enum.uniq()
       |> Enum.map(fn k ->
-           case Map.has_key?(map1, k) do
-             true ->
-               case Map.has_key?(map2, k) do
-                 true -> {k, do_diff(Map.get(map1, k), Map.get(map2, k), opts)}
-                 false -> {k, [Map.get(map1, k), 0, 0]}
-               end
+        case Map.has_key?(map1, k) do
+          true ->
+            case Map.has_key?(map2, k) do
+              true -> {k, do_diff(Map.get(map1, k), Map.get(map2, k), opts)}
+              false -> {k, [Map.get(map1, k), 0, 0]}
+            end
 
-             false ->
-               {k, [Map.get(map2, k)]}
-           end
-         end)
+          false ->
+            {k, [Map.get(map2, k)]}
+        end
+      end)
       |> Enum.filter(fn {_, v} -> v !== nil end)
       |> Map.new()
 
@@ -262,26 +263,26 @@ defmodule JsonDiffEx do
     |> Enum.map(fn {s_index, value} -> {String.to_integer(s_index), value} end)
     |> Enum.sort_by(fn {idx, _v} -> idx end)
     |> Enum.reduce(new_list, fn
-         {index, %{} = diff_map}, acc ->
-           List.update_at(acc, index, &do_patch(&1, diff_map))
+      {index, %{} = diff_map}, acc ->
+        List.update_at(acc, index, &do_patch(&1, diff_map))
 
-         {index, [value | []]}, acc ->
-           List.insert_at(acc, index, value)
+      {index, [value | []]}, acc ->
+        List.insert_at(acc, index, value)
 
-         {index, [_old_value | [new_value]]}, acc ->
-           List.replace_at(acc, index, new_value)
-       end)
+      {index, [_old_value | [new_value]]}, acc ->
+        List.replace_at(acc, index, new_value)
+    end)
   end
 
   defp do_patch(map1, diff1) do
     diff2 =
       diff1
       |> Enum.map(fn {k, v} ->
-           case v do
-             [new_value] -> {k, new_value}
-             _ -> {k, v}
-           end
-         end)
+        case v do
+          [new_value] -> {k, new_value}
+          _ -> {k, v}
+        end
+      end)
       |> Map.new()
 
     map1
