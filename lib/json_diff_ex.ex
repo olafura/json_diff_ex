@@ -151,7 +151,7 @@ defmodule JsonDiffEx do
           new_list
 
         {deleted, check} ->
-          deleted_map = Enum.into(deleted, %{})
+          deleted_map = Map.new(deleted)
 
           check
           |> all_checked(deleted_map, opts)
@@ -159,13 +159,13 @@ defmodule JsonDiffEx do
                {_, nil} -> false
                _ -> true
              end)
-          |> Enum.into(%{})
+          |> Map.new()
       end
 
     if diff != %{} do
       diff
       |> Enum.concat([{"_t", "a"}])
-      |> Enum.into(%{})
+      |> Map.new()
     else
       nil
     end
@@ -207,7 +207,7 @@ defmodule JsonDiffEx do
            end
          end)
       |> Enum.filter(fn {_, v} -> v !== nil end)
-      |> Enum.into(%{})
+      |> Map.new()
 
     if map_size(diff) != 0 do
       diff
@@ -247,7 +247,7 @@ defmodule JsonDiffEx do
           |> clean_index()
           |> Enum.with_index()
 
-        {filtered_list, Enum.into(check, %{})}
+        {filtered_list, Map.new(check)}
     end
   end
 
@@ -282,12 +282,12 @@ defmodule JsonDiffEx do
              _ -> {k, v}
            end
          end)
-      |> Enum.into(%{})
+      |> Map.new()
 
     map1
     |> Map.merge(diff2, &do_patch_merge/3)
     |> Enum.filter(fn {_k, v} -> v !== @sentinel end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   defp do_patch_merge(_k, v_map, v_diff) do
