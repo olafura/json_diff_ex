@@ -1,5 +1,7 @@
 # JsonDiffEx
 
+[![Build Status](https://travis-ci.com/olafura/json_diff_ex.svg?branch=master)](https://travis-ci.com/olafura/json_diff_ex)
+
 Diff and patch for JSON in Elixir, works really well and is really fast
 
 
