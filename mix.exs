@@ -14,7 +14,15 @@ defmodule JsonDiffEx.Mixfile do
       elixir: "~> 1.4",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: dialyzer()
+    ]
+  end
+
+  def dialyzer do
+    [
+      plt_add_apps: [:mix, :ex_unit],
+      check_plt: true
     ]
   end
 
@@ -40,7 +48,8 @@ defmodule JsonDiffEx.Mixfile do
       {:coverex, "~> 1.4", only: :test},
       {:httpoison, "~> 1.0", only: :test},
       {:eep, git: "https://github.com/virtan/eep.git", only: :test},
-      {:stream_data, "~> 0.1", only: :test}
+      {:stream_data, "~> 0.1", only: :test},
+      {:dialyxir, "~> 1.1", only: [:dev, :test]}
     ]
   end
 end
