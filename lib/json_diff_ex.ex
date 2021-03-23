@@ -244,7 +244,7 @@ defmodule JsonDiffEx do
 
         filtered_list =
           list
-          |> Enum.filter(fn {_, index} -> index not in delete_list end)
+          |> Enum.reject(fn {_, index} -> index in delete_list end)
           |> clean_index()
           |> Enum.with_index()
 
