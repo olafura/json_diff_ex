@@ -29,7 +29,7 @@ defmodule JsonDiffEx.Mixfile do
     [
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Olafur Arason"],
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/olafura/json_diff_ex"}
     ]
   end
