@@ -9,8 +9,8 @@ defmodule JsonDiffExTest do
   import JsonDiffEx
 
   def comparediff(s1, s2, diff_res) do
-    j1 = Poison.decode!(s1)
-    j2 = Poison.decode!(s2)
+    j1 = Jason.decode!(s1)
+    j2 = Jason.decode!(s2)
 
     case @speed_test do
       true -> assert diff(j1, j2) == diff_res
@@ -19,8 +19,8 @@ defmodule JsonDiffExTest do
   end
 
   def comparediff_patch(s1, s2, diff1) do
-    j1 = Poison.decode!(s1)
-    j2 = Poison.decode!(s2)
+    j1 = Jason.decode!(s1)
+    j2 = Jason.decode!(s2)
 
     case @speed_test do
       true ->
@@ -47,7 +47,7 @@ defmodule JsonDiffExTest do
 
   test "check the same object" do
     s1 = ~s({"1": [1,2,3], "2": 1})
-    j1 = Poison.decode!(s1)
+    j1 = Jason.decode!(s1)
     assert diff(j1, j1) == %{}
     # jsondiffpatch returns undefined
   end
@@ -462,8 +462,8 @@ defmodule JsonDiffExTest do
     diff = JsonDiffEx.diff(obj1, obj2)
     patched = JsonDiffEx.patch(obj1, diff)
 
-    s1 = Poison.encode!(obj1)
-    s2 = Poison.encode!(obj2)
+    s1 = Jason.encode!(obj1)
+    s2 = Jason.encode!(obj2)
 
     assert diff == JsHelp.diff(s1, s2)
     assert patched == obj2
@@ -507,23 +507,15 @@ defmodule JsonDiffExTest do
         IO.puts("Path: #{inspect(["a", key])}")
 
         IO.puts(
-          "obj1: #{
-            inspect(
-              obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
-              limit: 100_000,
-              printable_limit: 1_000_000_000
-            )
-          }"
+          "obj1: #{inspect(obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+          limit: 100_000,
+          printable_limit: 1_000_000_000)}"
         )
 
         IO.puts(
-          "obj2: #{
-            inspect(
-              obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
-              limit: 100_000,
-              printable_limit: 1_000_000_000
-            )
-          }"
+          "obj2: #{inspect(obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+          limit: 100_000,
+          printable_limit: 1_000_000_000)}"
         )
 
         IO.puts("diff: #{inspect(diff |> Map.get("a") |> Map.get(key))}")
@@ -555,7 +547,7 @@ defmodule JsonDiffExTest do
     obj2 = %{"a" => list2}
 
     diff = JsonDiffEx.diff(obj1, obj2)
-    diff_js = JsHelp.diff(Poison.encode!(obj1), Poison.encode!(obj2))
+    diff_js = JsHelp.diff(Jason.encode!(obj1), Jason.encode!(obj2))
     diff_js_elixir = JsonDiffEx.diff(diff, diff_js)
 
     if diff_js_elixir !== %{} do
@@ -570,23 +562,15 @@ defmodule JsonDiffExTest do
         IO.puts("Path: #{inspect(["a", key])}")
 
         IO.puts(
-          "obj1: #{
-            inspect(
-              obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
-              limit: 100_000,
-              printable_limit: 1_000_000_000
-            )
-          }"
+          "obj1: #{inspect(obj1 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+          limit: 100_000,
+          printable_limit: 1_000_000_000)}"
         )
 
         IO.puts(
-          "obj2: #{
-            inspect(
-              obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
-              limit: 100_000,
-              printable_limit: 1_000_000_000
-            )
-          }"
+          "obj2: #{inspect(obj2 |> Map.get("a") |> Enum.at(String.to_integer(key)),
+          limit: 100_000,
+          printable_limit: 1_000_000_000)}"
         )
 
         IO.puts("diff: #{inspect(diff |> Map.get("a") |> Map.get(key))}")

@@ -1,7 +1,6 @@
-HTTPoison.start
-case HTTPoison.get("https://mtgjson.com/json/AllSets.json") do
-  {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> File.write!("profile/AllSets.json", body)
+case Req.get("https://mtgjson.com/api/v5/ModernAtomic.json", decode_body: false) do
+  {:ok, %Req.Response{body: body, status: 200}} -> File.write!("profile/ModernAtomic.json", body)
 end
-case HTTPoison.get("https://mtgjson.com/json/AllSets-x.json") do
-  {:ok, %HTTPoison.Response{body: body, status_code: 200}} -> File.write!("profile/AllSets-x.json", body)
+case Req.get("https://mtgjson.com/api/v5/LegacyAtomic.json", decode_body: false) do
+  {:ok, %Req.Response{body: body, status: 200}} -> File.write!("profile/LegacyAtomic.json", body)
 end

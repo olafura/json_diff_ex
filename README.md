@@ -95,7 +95,7 @@ and the test cases currently test make sure we keep that compatibility.
 Get medium profiling tests
 
 ```sh-session
-$ MIX_ENV=test mix run profile/get_usda_json.exs
+$ MIX_ENV=test mix run profile/get_usgov_json.exs
 ```
 
 Run medium profiling tests
