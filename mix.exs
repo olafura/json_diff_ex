@@ -41,14 +41,19 @@ defmodule JsonDiffEx.Mixfile do
   end
 
   defp deps do
-    [
+    resp = [
       {:credo, "~> 1.5", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
       {:ex_doc, "~> 0.24", only: :dev},
       {:jason, "~> 1.4", only: [:dev, :test]},
-      {:req, "~> 0.5.0", only: :test},
       {:stream_data, "~> 1.0", only: :test},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
+
+    if Version.match?(System.version(), ">= 1.13.0") do
+      resp ++ [{:req, "~> 0.5.0", only: :test}]
+    else
+      resp
+    end
   end
 end
