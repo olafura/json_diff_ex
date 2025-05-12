@@ -10,7 +10,7 @@ defmodule JsonDiffEx.Mixfile do
       description: "Diff and patch for JSON in Elixir",
       package: package(),
       docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
-      elixir: "~> 1.5",
+      elixir: "~> 1.7",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),

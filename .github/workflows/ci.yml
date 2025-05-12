@@ -5,34 +5,18 @@ jobs:
   test-legacy:
     runs-on: ubuntu-latest
     env:
-      CONTAINER: ubuntu:18.04
+      CONTAINER: ubuntu:20.04
     strategy:
       matrix:
-        elixir: ["1.5", "1.6", "1.7", "1.8", "1.9", "1.10", "1.11"]
-        otp: ["20", "21", "22", "23"]
+        elixir: ["1.7", "1.8", "1.9", "1.10", "1.11"]
+        otp: ["21", "22", "23"]
         exclude:
-          - elixir: "1.5"
-            otp: "21"
-          - elixir: "1.5"
-            otp: "22"
-          - elixir: "1.5"
-            otp: "23"
-          - elixir: "1.6"
-            otp: "21"
-          - elixir: "1.6"
-            otp: "22"
-          - elixir: "1.6"
-            otp: "23"
           - elixir: "1.7"
             otp: "23"
           - elixir: "1.8"
             otp: "23"
           - elixir: "1.9"
             otp: "23"
-          - elixir: "1.10"
-            otp: "20"
-          - elixir: "1.11"
-            otp: "20"
     steps:
       - uses: actions/checkout@v4
       - name: Start Docker Container
@@ -45,11 +29,8 @@ jobs:
           SCRIPT: |
             sed -i '/deb-src/s/^# *//' /etc/apt/sources.list
             apt-get update
-            apt-get install -y build-essential wget curl git autoconf m4 libncurses5-dev libssh-dev xsltproc fop
-            apt-get build-dep -y erlang
-            wget https://github.com/openssl/openssl/releases/download/OpenSSL_1_0_2u/openssl-1.0.2u.tar.gz
-            tar xf openssl-1.0.2u.tar.gz
-            cd openssl-1.0.2u/ && ./config --prefix=/usr/local/openssl-1.0.2u -fpic && make && make install
+            DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential curl git autoconf m4 libncurses5-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev
+            DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get build-dep -y erlang
             curl https://mise.run | sh
         run: docker exec build-container bash -c "$SCRIPT"
       - name: Setup Erlang/OTP and Elixir
@@ -57,7 +38,7 @@ jobs:
           SCRIPT: |
             eval "$(~/.local/bin/mise activate bash)"
             export LANG=en_US.UTF-8
-            MISE_VERBOSE=1 KERL_DEBUG=t ERLANG_OPENSSL_PATH="/usr/local/openssl-1.0.2u" KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/openssl-1.0.2u" mise use erlang@${{ matrix.otp }} || cat ~/.cache/mise/erlang/kerl/builds/*/otp_build*.log
+            MISE_VERBOSE=1 KERL_DEBUG=t mise use erlang@${{ matrix.otp }}
             mise use elixir@${{ matrix.elixir }}
         run: docker exec build-container bash -c "$SCRIPT"
       - name: Test
