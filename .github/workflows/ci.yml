@@ -30,7 +30,6 @@ jobs:
             sed -i '/deb-src/s/^# *//' /etc/apt/sources.list
             apt-get update
             DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential curl git autoconf m4 libncurses5-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev
-            DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get build-dep -y erlang
             curl https://mise.run | sh
         run: docker exec build-container bash -c "$SCRIPT"
       - name: Setup Erlang/OTP and Elixir
