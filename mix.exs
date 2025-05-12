@@ -51,11 +51,11 @@ defmodule JsonDiffEx.Mixfile do
 
     if Version.match?(System.version(), ">= 1.13.0") do
       resp ++ [
-        {:stream_data, "~> 0.5", only: :test},
+        {:stream_data, "~> 1.0", only: :test},
         {:req, "~> 0.5.0", only: :test}
       ]
     else
-      resp ++ [{:stream_data, "~> 1.0", only: :test}]
+      resp ++ [{:stream_data, "~> 0.5", only: :test}]
     end
   end
 end
