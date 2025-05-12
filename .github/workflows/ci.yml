@@ -3,9 +3,9 @@ on: [pull_request]
 
 jobs:
   test-legacy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
-      ImageOS: ubuntu18
+      CONTAINER: ubuntu:18.04
     strategy:
       matrix:
         elixir: ["1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10", "1.11"]
@@ -50,21 +50,42 @@ jobs:
           - elixir: "1.11"
             otp: "20"
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '8.10.0'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Start Docker Container
+        run: |
+          docker pull $CONTAINER
+          docker run --name build-container -d -v ${{ github.workspace }}:/workspace $CONTAINER tail -f /dev/null
+
+      - name: Install Dependencies
+        env:
+          SCRIPT: |
+            sed -i '/deb-src/s/^# *//' /etc/apt/sources.list
+            apt-get update
+            apt-get install -y build-essential wget curl git autoconf m4 libncurses5-dev libssh-dev xsltproc fop
+            apt-get build-dep -y erlang
+            wget https://github.com/openssl/openssl/releases/download/OpenSSL_1_0_2u/openssl-1.0.2u.tar.gz
+            tar xf openssl-1.0.2u.tar.gz
+            cd openssl-1.0.2u/ && ./config --prefix=/usr/local/openssl-1.0.2u -fpic && make && make install
+            curl https://mise.run | sh
+        run: docker exec build-container bash -c "$SCRIPT"
       - name: Setup Erlang/OTP and Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
-      - name: Install npm dependencies
-        run: npm install
-      - name: Install Elixir dependencies
-        run: mix deps.get
-      - name: Run tests
-        run: mix test
+        env:
+          SCRIPT: |
+            eval "$(~/.local/bin/mise activate bash)"
+            export LANG=en_US.UTF-8
+            KERL_DEBUG=t ERLANG_OPENSSL_PATH="/usr/local/openssl-1.0.2u" KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/openssl-1.0.2u" mise use erlang@${{ matrix.otp }} || cat ~/.cache/mise/erlang/kerl/builds/*/otp_build*.log
+            mise use elixir@${{ matrix.elixir }}
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: Test
+        env:
+          SCRIPT: |
+            cd /workspace
+            eval "$(~/.local/bin/mise activate bash)"
+            export LANG=en_US.UTF-8
+            mix local.hex --force
+            mix deps.get
+            mix test
+        run: docker exec build-container bash -c "$SCRIPT"
   test:
     runs-on: ubuntu-latest
     strategy:
