@@ -1,0 +1,100 @@
+name: CI
+on: [pull_request]
+
+jobs:
+  test-legacy:
+    runs-on: ubuntu-latest
+    env:
+      CONTAINER: ubuntu:20.04
+    strategy:
+      matrix:
+        elixir: ["1.7", "1.8", "1.9", "1.10", "1.11"]
+        otp: ["21", "22", "23"]
+        exclude:
+          - elixir: "1.7"
+            otp: "23"
+          - elixir: "1.8"
+            otp: "23"
+          - elixir: "1.9"
+            otp: "23"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Docker Container
+        run: |
+          docker pull $CONTAINER
+          docker run --name build-container -d -v ${{ github.workspace }}:/workspace $CONTAINER tail -f /dev/null
+
+      - name: Install Dependencies
+        env:
+          SCRIPT: |
+            sed -i '/deb-src/s/^# *//' /etc/apt/sources.list
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential curl git autoconf m4 libncurses5-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev
+            curl https://mise.run | sh
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: Setup Erlang/OTP and Elixir
+        env:
+          SCRIPT: |
+            eval "$(~/.local/bin/mise activate bash)"
+            export LANG=C.UTF-8
+            export LC_ALL=C.UTF-8
+            MISE_VERBOSE=1 KERL_DEBUG=t mise use erlang@${{ matrix.otp }}
+            MISE_VERBOSE=1 mise use elixir@${{ matrix.elixir }}-otp-${{ matrix.otp }}
+            DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y npm
+        run: docker exec build-container bash -c "$SCRIPT"
+      - name: Test
+        env:
+          SCRIPT: |
+            cd /workspace
+            eval "$(~/.local/bin/mise activate bash)"
+            export LANG=C.UTF-8
+            export LC_ALL=C.UTF-8
+            npm install
+            mix local.hex --force
+            mix deps.get
+            mix test
+        run: docker exec build-container bash -c "$SCRIPT"
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: ["1.12", "1.13", "1.14", "1.15", "1.16", "1.17", "1.18"]
+        otp: ["24", "25", "26", "27"]
+        exclude:
+          - elixir: "1.12"
+            otp: "25"
+          - elixir: "1.12"
+            otp: "26"
+          - elixir: "1.12"
+            otp: "27"
+          - elixir: "1.13"
+            otp: "25"
+          - elixir: "1.13"
+            otp: "26"
+          - elixir: "1.13"
+            otp: "27"
+          - elixir: "1.14"
+            otp: "26"
+          - elixir: "1.14"
+            otp: "27"
+          - elixir: "1.15"
+            otp: "27"
+          - elixir: "1.16"
+            otp: "27"
+          - elixir: "1.17"
+            otp: "24"
+          - elixir: "1.18"
+            otp: "24"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Erlang/OTP and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Install npm dependencies
+        run: npm install
+      - name: Install Elixir dependencies
+        run: mix deps.get
+      - name: Run tests
+        run: mix test

@@ -1,7 +1,7 @@
 defmodule JsonDiffEx.Mixfile do
   use Mix.Project
 
-  @version "0.6.7"
+  @version "0.7.0"
 
   def project do
     [
@@ -10,8 +10,7 @@ defmodule JsonDiffEx.Mixfile do
       description: "Diff and patch for JSON in Elixir",
       package: package(),
       docs: [source_ref: "v#{@version}", main: "JsonDiffEx"],
-      test_coverage: [tool: Coverex.Task],
-      elixir: "~> 1.4",
+      elixir: "~> 1.7",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -36,20 +35,27 @@ defmodule JsonDiffEx.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [
+      extra_applications: [:logger]
+    ]
   end
 
   defp deps do
-    [
-      {:poison, "~> 4.0", only: [:dev, :test]},
+    resp = [
       {:credo, "~> 1.5", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
       {:ex_doc, "~> 0.24", only: :dev},
-      {:coverex, "~> 1.5", only: :test},
-      {:httpoison, "~> 1.8", only: :test},
-      {:eep, git: "https://github.com/virtan/eep.git", only: :test},
-      {:stream_data, "~> 0.5", only: :test},
-      {:dialyxir, "~> 1.1", only: [:dev, :test]}
+      {:jason, "~> 1.4", only: [:dev, :test]},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
+
+    if Version.match?(System.version(), ">= 1.13.0") do
+      resp ++ [
+        {:stream_data, "~> 1.0", only: :test},
+        {:req, "~> 0.5.0", only: :test}
+      ]
+    else
+      resp ++ [{:stream_data, "~> 0.5", only: :test}]
+    end
   end
 end
