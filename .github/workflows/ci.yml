@@ -1,0 +1,72 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: ["1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10", "1.11", "1.12", "1.13", "1.14", "1.15", "1.16", "1.17", "1.18"]
+        otp: ["19.3", "20.3", "21.0", "22.0", "23.0", "24.0", "25.0", "26.0", "27.0"]
+        exclude:
+          - elixir: "1.4"
+            otp: "20.0"
+          - elixir: "1.4"
+            otp: "21.0"
+          - elixir: "1.4"
+            otp: "22.0"
+          - elixir: "1.4"
+            otp: "23.0"
+          - elixir: "1.5"
+            otp: "20.0"
+          - elixir: "1.5"
+            otp: "21.0"
+          - elixir: "1.5"
+            otp: "22.0"
+          - elixir: "1.5"
+            otp: "23.0"
+          - elixir: "1.6"
+            otp: "21.0"
+          - elixir: "1.6"
+            otp: "22.0"
+          - elixir: "1.6"
+            otp: "23.0"
+          - elixir: "1.7"
+            otp: "19.3"
+          - elixir: "1.7"
+            otp: "20.3"
+          - elixir: "1.7"
+            otp: "23.0"
+          - elixir: "1.8"
+            otp: "19.3"
+          - elixir: "1.8"
+            otp: "20.3"
+          - elixir: "1.8"
+            otp: "23.0"
+          - elixir: "1.9"
+            otp: "19.3"
+          - elixir: "1.9"
+            otp: "20.3"
+          - elixir: "1.9"
+            otp: "23.0"
+          - elixir: "1.10"
+            otp: "19.3"
+          - elixir: "1.10"
+            otp: "20.3"
+          - elixir: "1.11"
+            otp: "19.3"
+          - elixir: "1.11"
+            otp: "20.3"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Erlang/OTP and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Install npm dependencies
+        run: npm install
+      - name: Install Elixir dependencies
+        run: mix deps.get
+      - name: Run tests
+        run: mix test

@@ -13,3 +13,6 @@ profile/*.json
 *~
 *.swp
 *.swo
+
+# Aider
+.aider*
