@@ -39,7 +39,7 @@ jobs:
             export LANG=C.UTF-8
             export LC_ALL=C.UTF-8
             MISE_VERBOSE=1 KERL_DEBUG=t mise use erlang@${{ matrix.otp }}
-            MISE_VERBOSE=1 mise use elixir@${{ matrix.elixir }}
+            MISE_VERBOSE=1 mise use elixir@${{ matrix.elixir }}-otp-${{ matrix.otp }}
         run: docker exec build-container bash -c "$SCRIPT"
       - name: Test
         env:
