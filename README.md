@@ -9,7 +9,7 @@ First, add JsonDiffEx to your `mix.exs` dependencies:
 
 ```elixir
 def deps do
-  [{:json_diff_ex, "~> 0.5.0"}]
+  [{:json_diff_ex, "~> 0.7.0"}]
 end
 ```
 
